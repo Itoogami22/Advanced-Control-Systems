@@ -5,9 +5,20 @@ close all; clear; clc;
 robot = importrobot('00001_PRR_zzx FILIPPO SEGALLA.urdf');
 showdetails(robot)
 
-figure;
+fig = figure;
 config = homeConfiguration(robot);
 show(robot, config);
+
+% Enable 3D plot controls (zoom, pan, rotate)
+rotate3d on;              % Enable 3D dynamic rotation with left-click drag
+cameratoolbar('Show');    % Display camera toolbar at the top
+grid on;                  % Enable grid lines for spatial reference
+axis equal;               % Keep proportional axis scaling
+
+% Set larger axis limits to center the robot in an expanded grid
+xlim([-1.0, 1.0]);        % Expand X-axis limits
+ylim([-1.0, 1.0]);        % Expand Y-axis limits
+zlim([ 0.0, 1.4]);        % Expand Z-axis limits
 
 %% Symbolic variables for the computations
 syms a alpha d theta real                           % Generic DH-Table parameters
