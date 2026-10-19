@@ -1,9 +1,22 @@
-%% ================================================================================ %%
-% DH-Table, Direct Kinematics, Inverse Kinematics, Geometric and Analytical Jacobian %
-% ================================================================================== %
+%% DH-Table, Direct Kinematics, Inverse Kinematics, Geometric and Analytical Jacobian
 close all; clc;
 
-% Symbolic variables for the computations
+%% Display Robot
+robot = importrobot('00001_PRR_zzx FILIPPO SEGALLA.urdf');
+showdetails(robot)
+
+figure;
+config = homeConfiguration(robot);
+show(robot,config);
+
+config(1).JointPosition = INSERT_VALUE; 
+config(2).JointPosition = INSERT_VALUE;
+config(3).JointPosition = INSERT_VALUE;
+
+show(robot,config);
+
+
+%% Symbolic variables for the computations
 syms a alpha d theta real                           % Generic DH-Table parameters
 syms q1 q2 q3 real                                  % Active joint variables (q_i)
 syms a1 a2 a3 alpha1 alpha2 alpha3 d1 d2 d3 real    % Kinematic robot parameters (link lengths and offsets)
@@ -18,11 +31,17 @@ A = [cos(theta) -sin(theta)*cos(alpha)  sin(theta)*sin(alpha) a*cos(theta); ...
 
 % Base frame transformation matrix (World frame to Frame 0)
 % Default is the identity matrix eye(4) when no base offset/rotation exists
-A_baseTransformation = eye(4);
+TB0 = [ 0 0 0 0;
+        0 0 0 0;
+        0 0 0 0.15;
+        0 0 0 1 ];
 
 % End-Effector frame transformation matrix (Frame n to Tool frame)
 % Default is the identity matrix eye(4) when no tool offset/rotation exists
-EE_baseTransformation = eye(4);
+EE_baseTransformation = [ 0 0 1 0;
+                          0 1 0 0;
+                         -1 0 0 0;
+                          0 0 0 1 ];
 
 % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % % 
 %                                                                     %
@@ -34,17 +53,17 @@ EE_baseTransformation = eye(4);
 q = [q1; q2; q3];
 
 % Joint types: 'R' for Revolute (theta is variable), 'P' for Prismatic (d is variable)
-joint_types = ['R'; 'R'; 'R']';
+joint_types = ['P'; 'R'; 'R']';
 
 % Denavit-Hartenberg parameter table [a, alpha, d, theta]
-DH_table = [ a1  alpha1  d1  q1;
-             a2  alpha2  d2  q2;
-             a3  alpha3  d3  q3 ];
+DH_table = [ 0    0     q1   0;
+             0    pi/2  0.4  q2;
+             0.4  0     0    q3 ];
 
 % Compute cumulative transformation matrices T_0i
 num_joints = size(DH_table, 1);
 T = cell(num_joints, 1);
-T_current = A_baseTransformation; % Start cumulative multiplication from base frame
+T_current = TB0; % Start cumulative multiplication from base frame
 
 for i = 1:num_joints
     % Substitute link i DH parameters into generic matrix A
@@ -58,21 +77,21 @@ end
 % Apply End-Effector transformation to obtain final matrix T_0n
 T_final = simplify(T{end} * EE_baseTransformation);
 
-% Display intermediate transformation matrices T_0i
-fprintf("\n--- Intermediate Transformation Matrices ---\n");
-
-fprintf("Matrix TB0:\n")
-disp(T_current)
+fprintf("\n--- Base Transformation Matrix ---\n");
+fprintf("Matrix TB0 (World Frame -> Joint 0 Frame):\n");
+disp(TB0);
 fprintf("------------------------------------------------------------\n");
 
+% Display intermediate transformation matrices T_0i
+fprintf("\n--- Intermediate Transformation Matrices ---\n");
 for i = 1:num_joints
-    fprintf("Matrix T0%d (Base -> Joint %d):\n", i, i);
+    fprintf("Matrix TB%d (Base -> Joint %d):\n", i, i);
     disp(T{i}); % Display T_0i matrix
     fprintf("------------------------------------------------------------\n");
 end
 
 % Display final transformation matrix T_0^n
-fprintf("\nMatrix T0n Final (Base -> End-Effector):\n");
+fprintf("\nMatrix T0E Final (Base -> End-Effector):\n");
 disp(T_final);
 fprintf("============================================================\n\n");
 
@@ -88,7 +107,8 @@ A1 = subs(A, [a alpha d theta], DH_table(1,:));
 A2 = subs(A, [a alpha d theta], DH_table(2,:));
 A3 = subs(A, [a alpha d theta], DH_table(3,:));
 
-% Analytical inverse of A1 using rigid body property: inv(A1) = [R1' -R1'*p1; 0 0 0 1]
+% Analytical inverse of A1 using rigid body property: inv(A1) = [R1'    -R1'*p1;
+%                                                                0 0 0   1]
 R1 = A1(1:3, 1:3);
 p1 = A1(1:3, 4);
 A1_inv = [R1', -R1'*p1; 0 0 0 1];
@@ -98,8 +118,8 @@ LHS = simplify(A1_inv * T_des);
 RHS = simplify(A2 * A3);
 
 % Kinematic decoupling: position of Joint 3 origin (subtracting link 3 contribution)
-px2 = px - a3 * cos(phi);
-py2 = py - a3 * sin(phi);
+px2 = px - a3 * cos(phi); % Coordinate X of Frame 2 --> Joint 3
+py2 = py - a3 * sin(phi); % Coordinate Y of Frame 2 --> Joint 3
 
 % Closed-form analytical solution for q2 (Law of Cosines on reduced 2R arm)
 cos_q2_val = simplify((px2^2 + py2^2 - a1^2 - a2^2) / (2 * a1 * a2));
@@ -196,7 +216,7 @@ Euler = [phi_euler; theta_euler; psi_euler];
 JaPhi = simplify(jacobian(Euler, q));
 
 % Stack linear and angular components to form complete Analytical Jacobian (Ja = [JaP; JaPhi])
-Ja = [JaP; JaPhi];
+Ja = simplify([JaP; JaPhi]);
 
 % Display Analytical Jacobian matrix
 fprintf("\n--- Analytical Jacobian JG (6x%d) ---\n", num_joints);
