@@ -76,7 +76,7 @@ for i = 1:num_joints
 end
 
 % Display final transformation matrix T0E in simplified decimal format
-fprintf("\nMatrix T0E Final (Base -> End-Effector):\n");
+fprintf("\nMatrix TBE Final (Base -> End-Effector):\n");
 disp(vpa(T_final, 4));
 fprintf("============================================================\n\n");
 
