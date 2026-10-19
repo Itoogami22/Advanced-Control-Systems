@@ -33,7 +33,6 @@ A = [cos(theta) -sin(theta)*cos(alpha)  sin(theta)*sin(alpha) a*cos(theta); ...
      0           0                      0                     1];
 
 % Base frame transformation matrix (World frame to Frame 0)
-% Rotz(pi/2) * Transz(0.65)
 TB0 = [ 0 -1  0  0;
         1  0  0  0;
         0  0  1  0.65;
