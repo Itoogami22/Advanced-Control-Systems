@@ -63,7 +63,7 @@ T_current = sym(TB0); % Cast to symbolic matrix for cumulative multiplication
 for i = 1:num_joints
     % Substitute link i DH parameters into generic matrix A
     A_i = simplify(subs(A, [a alpha d theta], DH_table(i,:)));
-    
+
     % Compute cumulative homogeneous transformation: T_0i = T_0(i-1) * A_i
     T_current = simplify(T_current * A_i);
     T{i} = T_current; % Store transformation T_0^i in cell array
@@ -161,7 +161,13 @@ fprintf("============================================================\n\n");
 
 %% Analytical Jacobian
 % Compute linear position component: JaP = d(p_e)/dq
-JaP = simplify(jacobian(pe, q));
+% Manual computation of each element to avoid using the jacobian() function
+JaP = sym(zeros(3, num_joints));
+for i = 1:3      % Coordinates: px, py, pz
+    for j = 1:num_joints  % Joints: q1, q2, q3
+        JaP(i,j) = simplify(diff(pe(i), q(j)));
+    end
+end
 
 % Extract End-Effector rotation matrix R (3x3)
 R = T_final(1:3, 1:3);
@@ -174,10 +180,20 @@ psi_euler   = simplify(atan2(R(3,2), -R(3,1)));
 Euler = [phi_euler; theta_euler; psi_euler];
 
 % Compute orientation component: JaPhi = d(Euler)/dq
-JaPhi = simplify(jacobian(Euler, q));
+% Manual computation of each element to avoid using the jacobian() function
+JaPhi = sym(zeros(3, num_joints));
+for i = 1:3      % Angles: phi, theta, psi
+    for j = 1:num_joints  % Joints: q1, q2, q3
+        JaPhi(i,j) = simplify(diff(Euler(i), q(j)));
+    end
+end
 
 % Complete Analytical Jacobian: Ja = [JaP; JaPhi]
 Ja = simplify([JaP; JaPhi]);
+
+% Remove abs() and dirac() artifacts from symbolic differentiation
+Ja = subs(Ja, abs(sin(q3)), sin(q3));
+Ja = subs(Ja, dirac(sin(q3)), 0);
 
 % Display Analytical Jacobian matrix in simplified decimal format
 fprintf("\n--- Analytical Jacobian Ja (6x%d) ---\n", num_joints);
