@@ -1,0 +1,435 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- Geometry & Page Setup ---
+\usepackage[a4paper, margin=2.5cm]{geometry}
+
+% --- Font & Language Configuration ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+% --- Essential Packages ---
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{hyperref}
+
+% --- Custom Color Definitions ---
+\definecolor{brandblue}{RGB}{30, 58, 138}
+\definecolor{brandaccent}{RGB}{13, 148, 136}
+\definecolor{codebg}{RGB}{248, 250, 252}
+\definecolor{codeframe}{RGB}{226, 232, 240}
+\definecolor{commentgray}{RGB}{100, 116, 139}
+
+% --- Setup Hyperlinks ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=brandblue,
+    citecolor=brandaccent,
+    urlcolor=brandblue,
+    pdftitle={Assignment 1 Detailed Report - Kinematics and Jacobians},
+    pdfauthor={Filippo Segalla}
+}
+
+% --- Setup Listings (Code Environment) ---
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    captionpos=b,
+    commentstyle=\color{commentgray},
+    frame=single,
+    rulecolor=\color{codeframe},
+    keywordstyle=\color{brandblue}\bfseries,
+    stringstyle=\color{brandaccent},
+    showstringspaces=false,
+    tabsize=2
+}
+
+% --- Custom Section Title Formatting ---
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+    {-3.5ex \@plus -1ex \@minus -.2ex}%
+    {2.3ex \@plus .2ex}%
+    {\normalfont\Large\bfseries\color{brandblue}}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+    {-3.25ex \@plus -1ex \@minus -.2ex}%
+    {1.5ex \@plus .2ex}%
+    {\normalfont\large\bfseries\color{brandaccent}}}
+\makeatother
+
+% --- Document Metadata ---
+\title{
+    \vspace{-1cm}
+    \color{brandblue}\textbf{Advanced Control Systems}\\[0.3em]
+    \Large\textbf{Assignment 1: Comprehensive Kinematic Analysis, Inverse Kinematics, and Jacobians of a PRR Manipulator}
+}
+\author{\textbf{Student Name:} Filippo Segalla \quad|\quad \textbf{Student ID:} VR538212\\[0.2em]
+\small Department of Engineering for Innovative Medicine (DIMI) }
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent 
+This report presents a rigorous kinematic modeling and validation study for a 3-DOF PRR (Prismatic-Revolute-Revolute) robotic manipulator specified by a custom URDF description (\texttt{00001\_PRR\_zzx FILIPPO SEGALLA.urdf}). The report details the theoretical foundation, physical rationale, and mathematical derivation behind every stage of analysis: the Denavit-Hartenberg (D-H) frame alignment, direct kinematics transformations, analytical closed-form inverse kinematics, and the derivation of both Geometric ($\mathbf{J}_G$) and Analytical ($\mathbf{J}_a$) Jacobians. Each mathematical development is paired with an explanatory rationale answering \emph{what} operation is conducted and \emph{why} it is required in robot kinematics and control.
+\end{abstract}
+
+\hrule
+\vspace{1.5em}
+
+\section{System Architecture \& Kinematic Conventions}
+
+\subsection{Description of the PRR Manipulator}
+\paragraph{What is being done:}
+We model a 3-degree-of-freedom (3-DOF) spatial manipulator featuring a \textbf{PRR} architecture:
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{Joint 1 (Prismatic, $q_1$):} Translates vertically along the $Z_0$-axis, raising or lowering the entire arm structure.
+    \item \textbf{Joint 2 (Revolute, $q_2$):} Rotates about a vertical axis parallel to $Z_0$, sweeping the arm across the horizontal plane.
+    \item \textbf{Joint 3 (Revolute, $q_3$):} Rotates about a horizontal axis orthogonal to the second joint, providing elevation and reach in the vertical plane.
+\end{enumerate}
+
+\paragraph{Why it is done:}
+Analyzing the kinematic structure before writing equations establishes the boundary conditions for the manipulator's workspace. Identifying joint types (prismatic vs. revolute) dictates the selection of columns in velocity Jacobians and determines whether joint displacement represents a spatial offset (meters) or a rotational angle (radians).
+
+\subsection{Denavit-Hartenberg (D-H) Parameter Convention}
+\paragraph{What is being done:}
+We assign coordinate frames $F_0, F_1, F_2, F_3$ to each link following the standard Denavit-Hartenberg convention. The relative transformation between frame $i-1$ and frame $i$ is parameterized by four quantities: link length ($a_i$), link twist ($\alpha_i$), link offset ($d_i$), and joint angle ($\theta_i$).
+
+The elementary transformation matrix $\mathbf{A}_i$ is constructed via four consecutive operations:
+\begin{equation}
+    \mathbf{A}_i = \text{Rot}_{z, \theta_i} \cdot \text{Trans}_{z, d_i} \cdot \text{Trans}_{x, a_i} \cdot \text{Rot}_{x, \alpha_i}
+\end{equation}
+
+Carrying out the matrix multiplication yields the explicit standard D-H matrix:
+\begin{equation}
+    \mathbf{A}_i = \begin{bmatrix} 
+    \cos\theta_i & -\sin\theta_i \cos\alpha_i & \sin\theta_i \sin\alpha_i & a_i \cos\theta_i \\ 
+    \sin\theta_i & \cos\theta_i \cos\alpha_i & -\cos\theta_i \sin\alpha_i & a_i \sin\theta_i \\ 
+    0 & \sin\alpha_i & \cos\alpha_i & d_i \\ 
+    0 & 0 & 0 & 1 
+    \end{bmatrix}
+\end{equation}
+
+\paragraph{Why it is done:}
+A general rigid-body transformation in 3D space requires 6 independent parameters (3 translational, 3 rotational). The D-H convention reduces this requirement to 4 parameters per link by enforcing strict geometric constraints (e.g., placing the $X_i$-axis along the common normal between $Z_{i-1}$ and $Z_i$). This systematic reduction simplifies symbolic computation, minimizes potential human error in matrix setup, and provides a unified standard across academic and industrial robotics frameworks.
+
+\begin{table}[h!]
+\centering
+\caption{Denavit-Hartenberg parameters for the PRR Manipulator.}
+\label{tab:dh_table}
+\begin{tabular}{cccccc}
+\toprule
+\textbf{Link} $i$ & \textbf{Joint Type} & $a_i$ [m] & $\alpha_i$ [rad] & $d_i$ [m] & $\theta_i$ [rad] \\
+\midrule
+1 & Prismatic (P) & $0$ & $0$ & $q_1$ & $0$ \\
+2 & Revolute (R)  & $0$ & $\pi/2$ & $0.4$ & $q_2$ \\
+3 & Revolute (R)  & $0.4$ & $0$ & $0$ & $q_3$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\section{Direct Kinematics \& Frame Transformations}
+
+\subsection{Base and End-Effector Transformations}
+\paragraph{What is being done:}
+We incorporate two fixed transformation matrices, $\mathbf{T}_0^B$ and $\mathbf{T}_E^3$:
+\begin{equation}
+\mathbf{T}_0^B = \begin{bmatrix} 
+0 & -1 & 0 & 0 \\ 
+1 & 0 & 0 & 0 \\ 
+0 & 0 & 1 & 0.65 \\ 
+0 & 0 & 0 & 1 
+\end{bmatrix}, \quad
+\mathbf{T}_E^3 = \begin{bmatrix} 
+0 & 1 & 0 & 0 \\ 
+0 & 0 & 1 & 0 \\ 
+1 & 0 & 0 & 0 \\ 
+0 & 0 & 0 & 1 
+\end{bmatrix}
+\end{equation}
+
+\paragraph{Why it is done:}
+Standard D-H frames are placed based on geometric conveniences that rarely coincide with the actual physical world origin or the physical tool center point (TCP):
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Base Transformation ($\mathbf{T}_0^B$):} Relates the world coordinate system (e.g., ground level) to D-H Frame $0$. The vertical offset $0.65\text{ m}$ represents the fixed pedestal height of the robot base, while the $90^\circ$ $Z$-rotation aligns the internal D-H axis with the URDF coordinate system.
+    \item \textbf{Tool Transformation ($\mathbf{T}_E^3$):} Re-aligns the axes of D-H Frame 3 with the actual end-effector flange orientation defined in the URDF, ensuring that position and orientation commands correspond to the true physical end-effector.
+\end{itemize}
+
+\subsection{Cumulative Kinematic Transformations}
+\paragraph{What is being done:}
+The cumulative transformation from the base frame to the $i$-th frame is computed by sequential matrix multiplication:
+\begin{equation}
+    \mathbf{T}_i^0(q) = \mathbf{T}_0^B \cdot \mathbf{A}_1(q_1) \cdots \mathbf{A}_i(q_i)
+\end{equation}
+
+Evaluating these multiplications symbolically yields:
+\begin{equation}
+\mathbf{T}_1^0(q) = \begin{bmatrix}
+0 & -1 & 0 & 0 \\
+1 & 0 & 0 & 0 \\
+0 & 0 & 1 & q_1 + 0.65 \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\end{equation}
+
+\begin{equation}
+\mathbf{T}_2^0(q) = \begin{bmatrix}
+-\sin q_2 & 0 & \cos q_2 & 0 \\
+\cos q_2 & 0 & \sin q_2 & 0 \\
+0 & 1 & 0 & q_1 + 1.05 \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\end{equation}
+
+\begin{equation}
+\mathbf{T}_3^0(q) = \begin{bmatrix}
+-\sin q_2 \cos q_3 & \sin q_2 \sin q_3 & \cos q_2 & -0.4 \sin q_2 \cos q_3 \\
+\cos q_2 \cos q_3 & -\sin q_3 \cos q_2 & \sin q_2 & 0.4 \cos q_2 \cos q_3 \\
+\sin q_3 & \cos q_3 & 0 & q_1 + 0.4 \sin q_3 + 1.05 \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\end{equation}
+
+Multiplying $\mathbf{T}_3^0(q)$ by the end-effector transform $\mathbf{T}_E^3$ gives the final Direct Kinematics matrix $\mathbf{T}_E^B(q)$:
+\begin{equation}
+\mathbf{T}_E^B(q) = \begin{bmatrix}
+\cos q_2 & -\sin q_2 \cos q_3 & \sin q_2 \sin q_3 & -0.4 \sin q_2 \cos q_3 \\
+\sin q_2 & \cos q_2 \cos q_3 & -\sin q_3 \cos q_2 & 0.4 \cos q_2 \cos q_3 \\
+0 & \sin q_3 & \cos q_3 & q_1 + 0.4 \sin q_3 + 1.05 \\
+0 & 0 & 0 & 1
+\end{bmatrix}
+\end{equation}
+
+Extracting the 4th column yields the operational position vector $\mathbf{p}_e = [p_x, p_y, p_z]^T$:
+\begin{equation}
+    \mathbf{p}_e(q) = \begin{bmatrix}
+    p_x \\ p_y \\ p_z
+    \end{bmatrix} = \begin{bmatrix}
+    -0.4 \sin q_2 \cos q_3 \\
+    0.4 \cos q_2 \cos q_3 \\
+    q_1 + 0.4 \sin q_3 + 1.05
+    \end{bmatrix}
+\end{equation}
+
+\paragraph{Why it is done:}
+Direct Kinematics provides the fundamental mapping $\mathbf{p}_e = f(q)$ necessary for path planning, collision detection, and workspace visualization. Knowing the exact position of every intermediate joint frame ($\mathbf{T}_1^0, \mathbf{T}_2^0, \mathbf{T}_3^0$) is also required later to compute the partial Jacobians and link centers of mass for dynamic modeling.
+
+\section{Closed-Form Inverse Kinematics}
+
+\subsection{Derivation of Joint Variables}
+\paragraph{What is being done:}
+Inverse Kinematics solves for the joint variables $q = [q_1, q_2, q_3]^T$ given a target Cartesian coordinate $\mathbf{p}_e = [p_x, p_y, p_z]^T$. We derive an exact closed-form analytical solution.
+
+\paragraph{Derivation Steps:}
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{Solving for $q_3$:} Summing the squares of $p_x$ and $p_y$:
+    \begin{equation}
+        p_x^2 + p_y^2 = (-0.4 \sin q_2 \cos q_3)^2 + (0.4 \cos q_2 \cos q_3)^2 = 0.16 \cos^2 q_3 (\sin^2 q_2 + \cos^2 q_2) = 0.16 \cos^2 q_3
+    \end{equation}
+    Taking the square root gives:
+    \begin{equation}
+        \cos q_3 = \frac{\sqrt{p_x^2 + p_y^2}}{0.4}
+    \end{equation}
+    The sine component is determined via the Pythagorean identity $\sin q_3 = \pm \sqrt{1 - \cos^2 q_3}$.
+
+    \item \textbf{Solving for $q_2$:} Dividing $-p_x$ by $p_y$:
+    \begin{equation}
+        \frac{-p_x}{p_y} = \frac{0.4 \sin q_2 \cos q_3}{0.4 \cos q_2 \cos q_3} = \frac{\sin q_2}{\cos q_2} = \tan q_2 \implies q_2 = \text{atan2}(-p_x, p_y)
+    \end{equation}
+
+    \item \textbf{Solving for $q_1$:} Rearranging the expression for $p_z$:
+    \begin{equation}
+        p_z = q_1 + 0.4 \sin q_3 + 1.05 \implies q_1 = p_z - 1.05 - 0.4 \sin q_3
+    \end{equation}
+\end{enumerate}
+
+\subsection{Physical Rationale of Multiple Solutions (Elbow-Up vs. Elbow-Down)}
+\paragraph{What is being done:}
+Due to the sign ambiguity in $\sin q_3 = \pm \sqrt{1 - \cos^2 q_3}$, two valid kinematic branches are calculated:
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Branch 1 (Elbow-Up, $\sin q_3 > 0$):}
+    \begin{equation}
+        q_3^{(1)} = \text{atan2}\left(+\sqrt{1 - \cos^2 q_3}, \cos q_3\right), \quad q_1^{(1)} = p_z - 1.05 - 0.4 \sin q_3^{(1)}
+    \end{equation}
+    \item \textbf{Branch 2 (Elbow-Down, $\sin q_3 < 0$):}
+    \begin{equation}
+        q_3^{(2)} = \text{atan2}\left(-\sqrt{1 - \cos^2 q_3}, \cos q_3\right), \quad q_1^{(2)} = p_z - 1.05 - 0.4 \sin q_3^{(2)}
+    \end{equation}
+\end{itemize}
+
+\paragraph{Why it is done:}
+Analytical closed-form solutions are computationally far superior to numerical iterative solvers (such as Newton-Raphson) because they compute in deterministic execution time ($O(1)$ complexity) and reveal all possible physical configurations. In real-time trajectory control, having access to both branches allows the controller to select the configuration that avoids mechanical joint limits, prevents self-collisions, or minimizes energy consumption.
+
+\section{Geometric Jacobian ($\mathbf{J}_G$)}
+
+\subsection{Mathematical Formulation}
+\paragraph{What is being done:}
+The Geometric Jacobian $\mathbf{J}_G(q) \in \mathbb{R}^{6 \times 3}$ relates joint velocities $\dot{q}$ directly to the linear ($\mathbf{v}_e$) and angular ($\boldsymbol{\omega}_e$) velocities of the end-effector in 3D physical space:
+\begin{equation}
+    \begin{bmatrix} \mathbf{v}_e \\ \boldsymbol{\omega}_e \end{bmatrix} = \mathbf{J}_G(q) \dot{q} = \begin{bmatrix} \mathbf{J}_{v1} & \mathbf{J}_{v2} & \mathbf{J}_{v3} \\ \mathbf{J}_{w1} & \mathbf{J}_{w2} & \mathbf{J}_{w3} \end{bmatrix} \begin{bmatrix} \dot{q}_1 \\ \dot{q}_2 \\ \dot{q}_3 \end{bmatrix}
+\end{equation}
+
+Columns are derived according to joint type:
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Prismatic Joint $i$:} $\mathbf{J}_{vi} = \mathbf{z}_{i-1}$, $\mathbf{J}_{wi} = \mathbf{0}$.
+    \item \textbf{Revolute Joint $i$:} $\mathbf{J}_{vi} = \mathbf{z}_{i-1} \times (\mathbf{p}_e - \mathbf{p}_{i-1})$, $\mathbf{J}_{wi} = \mathbf{z}_{i-1}$.
+\end{itemize}
+
+\subsection{Column-by-Column Derivation}
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{Column 1 (Prismatic Joint 1):}
+    $\mathbf{z}_0 = [0, 0, 1]^T \implies \mathbf{J}_{v1} = [0, 0, 1]^T, \quad \mathbf{J}_{w1} = [0, 0, 0]^T$.
+
+    \item \textbf{Column 2 (Revolute Joint 2):}
+    $\mathbf{z}_1 = [0, 0, 1]^T, \quad \mathbf{p}_1 = [0, 0, q_1 + 0.65]^T$.
+    \begin{equation}
+        \mathbf{J}_{v2} = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix} \times \begin{bmatrix} -0.4 \sin q_2 \cos q_3 \\ 0.4 \cos q_2 \cos q_3 \\ 0.4 \sin q_3 + 0.4 \end{bmatrix} = \begin{bmatrix} -0.4 \cos q_2 \cos q_3 \\ -0.4 \sin q_2 \cos q_3 \\ 0 \end{bmatrix}, \quad \mathbf{J}_{w2} = \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}
+    \end{equation}
+
+    \item \textbf{Column 3 (Revolute Joint 3):}
+    $\mathbf{z}_2 = [\cos q_2, \sin q_2, 0]^T, \quad \mathbf{p}_2 = [0, 0, q_1 + 1.05]^T$.
+    \begin{equation}
+        \mathbf{J}_{v3} = \begin{bmatrix} \cos q_2 \\ \sin q_2 \\ 0 \end{bmatrix} \times \begin{bmatrix} -0.4 \sin q_2 \cos q_3 \\ 0.4 \cos q_2 \cos q_3 \\ 0.4 \sin q_3 \end{bmatrix} = \begin{bmatrix} 0.4 \sin q_2 \sin q_3 \\ -0.4 \sin q_3 \cos q_2 \\ 0.4 \cos q_3 \end{bmatrix}, \quad \mathbf{J}_{w3} = \begin{bmatrix} \cos q_2 \\ \sin q_2 \\ 0 \end{bmatrix}
+    \end{equation}
+\end{enumerate}
+
+Assembling the complete $6 \times 3$ Geometric Jacobian:
+\begin{equation}
+\mathbf{J}_G(q) = \begin{bmatrix}
+0 & -0.4 \cos q_2 \cos q_3 & 0.4 \sin q_2 \sin q_3 \\
+0 & -0.4 \sin q_2 \cos q_3 & -0.4 \sin q_3 \cos q_2 \\
+1 & 0 & 0.4 \cos q_3 \\
+0 & 0 & \cos q_2 \\
+0 & 0 & \sin q_2 \\
+0 & 1 & 0
+\end{bmatrix}
+\end{equation}
+
+\paragraph{Why it is done:}
+The Geometric Jacobian is essential for:
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{Velocity Control:} Mapping desired Cartesian velocities to joint control commands ($\dot{q} = \mathbf{J}_G^\dagger \mathbf{v}$).
+    \item \textbf{Singularity Analysis:} Singularity configurations occur when $\det(\mathbf{J}_G \mathbf{J}_G^T) = 0$ (e.g., when $\cos q_3 = 0$), where the robot loses a degree of freedom and required joint speeds approach infinity.
+    \item \textbf{Statics \& Force Control:} Via the principle of virtual work, $\boldsymbol{\tau} = \mathbf{J}_G^T \mathbf{h}_e$, mapping end-effector contact forces $\mathbf{h}_e$ to joint torques $\boldsymbol{\tau}$.
+\end{enumerate}
+
+\section{Analytical Jacobian ($\mathbf{J}_a$)}
+
+\subsection{Mathematical Formulation}
+\paragraph{What is being done:}
+The Analytical Jacobian $\mathbf{J}_a(q) \in \mathbb{R}^{6 \times 3}$ is obtained by directly differentiating the operational pose vector $\mathbf{x} = [\mathbf{p}_e^T, \boldsymbol{\phi}^T]^T$ with respect to joint coordinates $q$:
+\begin{equation}
+    \mathbf{J}_a(q) = \frac{\partial \mathbf{x}}{\partial q} = \begin{bmatrix} \frac{\partial \mathbf{p}_e}{\partial q} \\[0.4em] \frac{\partial \boldsymbol{\phi}}{\partial q} \end{bmatrix}
+\end{equation}
+
+Where $\boldsymbol{\phi} = [\phi, \theta, \psi]^T$ represents end-effector orientation parameterized by ZYZ Euler angles extracted from the rotation matrix $\mathbf{R}(q)$:
+\begin{equation}
+    \phi = q_2 + \frac{\pi}{2}, \quad \theta = q_3, \quad \psi = \frac{\pi}{2}
+\end{equation}
+
+Differentiating $\mathbf{p}_e$ and $\boldsymbol{\phi}$ yields:
+\begin{equation}
+\mathbf{J}_a(q) = \begin{bmatrix}
+0 & -0.4 \cos q_2 \cos q_3 & 0.4 \sin q_2 \sin q_3 \\
+0 & -0.4 \sin q_2 \cos q_3 & -0.4 \sin q_3 \cos q_2 \\
+1 & 0 & 0.4 \cos q_3 \\
+0 & 1 & 0 \\
+0 & 0 & 1 \\
+0 & 0 & 0
+\end{bmatrix}
+\end{equation}
+
+\paragraph{Why it is done:}
+Unlike angular velocity $\boldsymbol{\omega}_e$ (which is a vector quantity that cannot be directly integrated into a position coordinate), operational orientation angles $\boldsymbol{\phi}$ can be integrated. The Analytical Jacobian is therefore necessary for operational space control algorithms (e.g., Cartesian impedance control and PD pose tracking), where error feedback is expressed as a direct coordinate difference $\mathbf{e}_x = \mathbf{x}_d - \mathbf{x}$.
+
+\section{MATLAB Implementation \& Console Outputs}
+
+\subsection{Overview of the Script (\texttt{FirstAssignment\_2.m})}
+\paragraph{What is being done:}
+The MATLAB script \texttt{FirstAssignment\_2.m} implements the entire kinematic pipeline symbolically using the Symbolic Math Toolbox. It imports the URDF robot model, sets up interactive 3D graphics, computes DK matrices, evaluates closed-form IK equations, and derives both Jacobians. Numerical display is standardized using \texttt{vpa(..., 4)} to convert fraction artifacts into clean 4-digit decimals.
+
+\paragraph{Why it is done:}
+Symbolic automation guarantees mathematical rigor and eliminates transcription errors. Verifying symbolic results against numerical URDF visualization ensures that frame definitions, link offsets, and joint axes perfectly match the physical robot definition.
+
+\subsection{Verified Console Logs}
+Below are the exact console outputs generated by executing \texttt{FirstAssignment\_2.m} in MATLAB:
+
+\begin{lstlisting}[caption={MATLAB Console Output: Direct Kinematics Matrices.}]
+--- Base Transformation Matrix ---
+Matrix TB0 (World Frame -> Joint 0 Frame):
+   0.0000  -1.0000        0        0
+   1.0000   0.0000        0        0
+        0        0   1.0000   0.6500
+        0        0        0   1.0000
+------------------------------------------------------------
+
+--- Intermediate Transformation Matrices ---
+Matrix T01 (Base -> Joint 1):
+   0.0000  -1.0000        0        0
+   1.0000   0.0000        0        0
+        0        0   1.0000   q1 + 0.65
+        0        0        0   1.0000
+------------------------------------------------------------
+Matrix T02 (Base -> Joint 2):
+  -sin(q2)        0   cos(q2)        0
+   cos(q2)        0   sin(q2)        0
+         0   1.0000        0   q1 + 1.05
+         0        0        0   1.0000
+------------------------------------------------------------
+Matrix T03 (Base -> Joint 3):
+  -sin(q2)*cos(q3)   sin(q2)*sin(q3)   cos(q2)  -0.4*sin(q2)*cos(q3)
+   cos(q2)*cos(q3)  -sin(q3)*cos(q2)   sin(q2)   0.4*cos(q2)*cos(q3)
+           sin(q3)           cos(q3)         0   q1 + 0.4*sin(q3) + 1.05
+                 0                 0         0                1.0000
+------------------------------------------------------------
+
+Matrix TBE Final (Base -> End-Effector):
+   cos(q2)  -sin(q2)*cos(q3)   sin(q2)*sin(q3)  -0.4*sin(q2)*cos(q3)
+   sin(q2)   cos(q2)*cos(q3)  -sin(q3)*cos(q2)   0.4*cos(q2)*cos(q3)
+         0           sin(q3)           cos(q3)   q1 + 0.4*sin(q3) + 1.05
+         0                 0                 0                1.0000
+============================================================
+\end{lstlisting}
+
+\begin{lstlisting}[caption={MATLAB Console Output: Inverse Kinematics Solutions and Jacobians.}]
+--- Analytical Closed-Form Inverse Kinematics Solutions ---
+Solution Branch 1:
+q1 = pz - 0.4*sin(atan2((1.0 - (px^2 + py^2)/0.16)^(1/2), (px^2 + py^2)^(1/2)/0.4)) - 1.05
+q2 = atan2(-px, py)
+q3 = atan2((1.0 - (px^2 + py^2)/0.16)^(1/2), (px^2 + py^2)^(1/2)/0.4)
+------------------------------------------------------------
+Solution Branch 2:
+q1 = pz + 0.4*sin(atan2((1.0 - (px^2 + py^2)/0.16)^(1/2), (px^2 + py^2)^(1/2)/0.4)) - 1.05
+q2 = atan2(-px, py)
+q3 = -atan2((1.0 - (px^2 + py^2)/0.16)^(1/2), (px^2 + py^2)^(1/2)/0.4)
+------------------------------------------------------------
+============================================================
+
+--- Geometric Jacobian JG (6x3) ---
+        0   -0.4*cos(q2)*cos(q3)    0.4*sin(q2)*sin(q3)
+        0   -0.4*sin(q2)*cos(q3)   -0.4*sin(q3)*cos(q2)
+   1.0000                      0            0.4*cos(q3)
+        0                      0                cos(q2)
+        0                      0                sin(q2)
+        0                 1.0000                      0
+============================================================
+
+--- Analytical Jacobian Ja (6x3) ---
+        0   -0.4*cos(q2)*cos(q3)    0.4*sin(q2)*sin(q3)
+        0   -0.4*sin(q2)*cos(q3)   -0.4*sin(q3)*cos(q2)
+   1.0000                      0            0.4*cos(q3)
+        0                 1.0000                      0
+        0                      0                 1.0000
+        0                      0                      0
+============================================================
+\end{lstlisting}
+
+\end{document}
