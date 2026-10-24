@@ -3,6 +3,7 @@ close all; clear; clc;
 
 %% Display Robot
 robot = importrobot('00001_PRR_zzx FILIPPO SEGALLA.urdf');
+robot.DataFormat = 'row'; % Allow joint configurations as row vectors
 showdetails(robot)
 
 fig = figure;
@@ -90,9 +91,31 @@ fprintf("\nMatrix TBE Final (Base -> End-Effector):\n");
 disp(vpa(T_final, 4));
 fprintf("============================================================\n\n");
 
+% Cross-check the manually computed transformation with MATLAB's rigidBodyTree.
+% Evaluate both matrices at the same numerical joint configuration.
+q_check = [-0.2, 0.4, 0.6];
+T_final_check = double(subs(T_final, q, q_check.'));
+T_builtin = getTransform(robot, q_check, 'ee', 'world');
+transform_equal = isequal(size(T_final_check), size(T_builtin)) && ...
+    all(abs(T_final_check(:) - T_builtin(:)) < 1e-9);
+if transform_equal
+    fprintf("Transformation cross-check T_final vs getTransform(): MATCH\n");
+else
+    fprintf("Transformation cross-check T_final vs getTransform(): DIFFER\n");
+end
+fprintf("============================================================\n\n");
+
 %% Inverse Kinematics (Closed-Form Analytical Solution for PRR)
+
+% --- Numerical Example for Inverse Kinematics ---
+px_val = 0.25;
+py_val = 0.25;
+pz_val = 0.8;
+% -----------------------------------------------
+
 r_xy = simplify(sqrt(px^2 + py^2));
 cos_q3_val = simplify(r_xy / 0.4);
+
 
 % Solution Branch 1 (Elbow-Up)
 sin_q3_b1 = simplify(sqrt(1 - cos_q3_val^2));
@@ -114,11 +137,48 @@ q3_ik_sol = [q3_b1; q3_b2];
 fprintf("\n--- Analytical Closed-Form Inverse Kinematics Solutions ---\n");
 for k = 1:2
     fprintf("Solution Branch %d:\n", k);
+
+    % Evaluate symbolic solutions with numerical values
+    q1_num = double(subs(q1_ik_sol(k), [px py pz], [px_val py_val pz_val]));
+    q2_num = double(subs(q2_ik_sol(k), [px py pz], [px_val py_val pz_val]));
+    q3_num = double(subs(q3_ik_sol(k), [px py pz], [px_val py_val pz_val]));
+
+    fprintf("Numerical Solution (px=%.2f, py=%.2f, pz=%.2f):\n", px_val, py_val, pz_val);
+    fprintf("q1 = %.4f\n", q1_num);
+    fprintf("q2 = %.4f\n", q2_num);
+    fprintf("q3 = %.4f\n", q3_num);
+    fprintf("Symbolic Form:\n");
     fprintf("q1 = %s\n", char(vpa(q1_ik_sol(k), 4)));
     fprintf("q2 = %s\n", char(vpa(q2_ik_sol(k), 4)));
     fprintf("q3 = %s\n", char(vpa(q3_ik_sol(k), 4)));
     fprintf("------------------------------------------------------------\n");
+
+    % --- Visualization of the Inverse Kinematics Solution ---
+    figure;
+    config_ik = [q1_num, q2_num, q3_num];
+    show(robot, config_ik);
+    ax = gca;
+    hold on;
+    [sphere_x, sphere_y, sphere_z] = sphere(20);
+    target_radius = 0.035;
+    surf(px_val + target_radius * sphere_x, ...
+         py_val + target_radius * sphere_y, ...
+         pz_val + target_radius * sphere_z, ...
+         'FaceColor', 'b', 'EdgeColor', 'none');
+    text(px_val + 0.08, py_val + 0.03, pz_val, 'Target Point', 'Color', 'r', 'FontWeight', 'bold');
+    title(sprintf('Inverse Kinematics - Branch %d', k));
+    grid on; axis equal;
+    xlim([-1.0, 1.0]); ylim([-1.0, 1.0]); zlim([0.0, 1.4]);
+    xlabel('X [m]'); ylabel('Y [m]'); zlabel('Z [m]');
+    view(3);
+
+    % Enable independent 3D rotation for this branch's axes
+    rotate3d(ax, 'on');
+
+    hold off;
 end
+
+
 fprintf("============================================================\n\n");
 
 %% Geometric Jacobian
@@ -157,6 +217,19 @@ JG = simplify(JG);
 % Display Geometric Jacobian matrix in simplified decimal format
 fprintf("\n--- Geometric Jacobian JG (6x%d) ---\n", num_joints);
 disp(vpa(JG, 4));
+fprintf("============================================================\n\n");
+
+% MATLAB returns [angular; linear], while JG is arranged as [linear; angular].
+JG_check = double(subs(JG, q, q_check.'));
+JG_builtin = geometricJacobian(robot, q_check, 'ee');
+JG_builtin = [JG_builtin(4:6, :); JG_builtin(1:3, :)];
+geometric_jacobian_equal = isequal(size(JG_check), size(JG_builtin)) && ...
+    all(abs(JG_check(:) - JG_builtin(:)) < 1e-9);
+if geometric_jacobian_equal
+    fprintf("Geometric Jacobian cross-check JG vs geometricJacobian(): MATCH\n");
+else
+    fprintf("Geometric Jacobian cross-check JG vs geometricJacobian(): DIFFER\n");
+end
 fprintf("============================================================\n\n");
 
 %% Analytical Jacobian
@@ -198,4 +271,28 @@ Ja = subs(Ja, dirac(sin(q3)), 0);
 % Display Analytical Jacobian matrix in simplified decimal format
 fprintf("\n--- Analytical Jacobian Ja (6x%d) ---\n", num_joints);
 disp(vpa(Ja, 4));
+fprintf("============================================================\n\n");
+
+% Convert the built-in angular velocity to ZYZ Euler-angle rates, then
+% compare all six rows of the analytical and built-in Jacobians.
+phi_check = double(subs(phi_euler, q, q_check.'));
+theta_check = double(subs(theta_euler, q, q_check.'));
+if abs(sin(theta_check)) < 1e-9
+    fprintf("Full analytical Jacobian cross-check Ja: SKIPPED (ZYZ singularity)\n");
+else
+    EulerRateToAngular = [0, -sin(phi_check),  sin(theta_check) * cos(phi_check); ...
+                          0,  cos(phi_check),  sin(theta_check) * sin(phi_check); ...
+                          1,  0,               cos(theta_check)];
+    Ja_builtin = [JG_builtin(1:3, :); ...
+                  EulerRateToAngular \ JG_builtin(4:6, :)];
+    Ja_check = double(subs(Ja, q, q_check.'));
+    analytical_jacobian_equal = isequal(size(Ja_check), size(Ja_builtin)) && ...
+        all(abs(Ja_check(:) - Ja_builtin(:)) < 1e-9);
+    if analytical_jacobian_equal
+        fprintf("Full analytical Jacobian cross-check Ja: MATCH\n");
+    else
+        fprintf("Full analytical Jacobian cross-check Ja: DIFFER\n");
+    end
+end
+fprintf("The built-in angular velocity is converted to ZYZ Euler-angle rates for comparison.\n");
 fprintf("============================================================\n\n");
