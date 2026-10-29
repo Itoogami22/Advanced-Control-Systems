@@ -1,0 +1,258 @@
+﻿\documentclass[11pt, a4paper]{article}
+
+% --- Geometry & Page Setup ---
+\usepackage[a4paper, margin=2.5cm]{geometry}
+
+% --- Font & Language Configuration ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+% --- Essential Packages ---
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+% --- Custom Color Definitions ---
+\definecolor{brandblue}{RGB}{30, 58, 138}
+\definecolor{brandaccent}{RGB}{13, 148, 136}
+\definecolor{codebg}{RGB}{248, 250, 252}
+\definecolor{codeframe}{RGB}{226, 232, 240}
+\definecolor{commentgray}{RGB}{100, 116, 139}
+
+% --- Setup Hyperlinks ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=brandblue,
+    citecolor=brandaccent,
+    urlcolor=brandblue,
+    pdftitle={Assignment 3 Detailed Report - Dynamic Equations of Motion},
+    pdfauthor={Filippo Segalla}
+}
+
+% --- Setup Listings (Code Environment) ---
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    breakatwhitespace=false,
+    captionpos=b,
+    commentstyle=\color{commentgray},
+    frame=single,
+    rulecolor=\color{codeframe},
+    keywordstyle=\color{brandblue}\bfseries,
+    stringstyle=\color{brandaccent},
+    showstringspaces=false,
+    tabsize=2
+}
+
+% --- Custom Section Title Formatting ---
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+    {-3.5ex \@plus -1ex \@minus -.2ex}%
+    {2.3ex \@plus .2ex}%
+    {\normalfont\Large\bfseries\color{brandblue}}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+    {-3.25ex \@plus -1ex \@minus -.2ex}%
+    {1.5ex \@plus .2ex}%
+    {\normalfont\large\bfseries\color{brandaccent}}}
+\makeatother
+
+% --- Document Metadata ---
+\title{
+    \vspace{-1cm}
+    \color{brandblue}\textbf{Advanced Control Systems}\\[0.3em]
+    \Large\textbf{Assignment 3: Dynamic Modeling, Complete Equations of Motion, Christoffel Symbols, and Skew-Symmetry Analysis for a 3-DOF PRR Manipulator}
+}
+\author{\textbf{Student Name:} Filippo Segalla \quad|\quad \textbf{Student ID:} VR538212\\[0.2em]
+\small Department of Engineering for Innovative Medicine (DIMI) }
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent 
+This report presents the complete derivation and formal characterization of the dynamic equations of motion for a spatial 3-DOF PRR (Prismatic-Revolute-Revolute) robotic manipulator defined by the URDF specification (\texttt{00001\_PRR\_zzx} \texttt{FILIPPO} \texttt{SEGALLA.urdf}). Building upon the kinematic and dynamic energy results established in Assignment \#1 and Assignment \#2, the equations of motion are systematically derived in joint space using the Euler-Lagrange analytical mechanics framework: $\mathbf{B}(q)\ddot{q} + \mathbf{C}(q, \dot{q})\dot{q} + \mathbf{g}(q) = \boldsymbol{\tau}$. The Coriolis and centrifugal terms are computed component-by-component via Christoffel symbols of the first type. Furthermore, the essential structural passivity property—the skew-symmetry of the matrix $(\mathbf{\dot{B}}(q) - 2\mathbf{C}(q, \dot{q}))$—is analytically proven and numerically verified. Both parametric symbolic formulas and clean decimal numerical expressions evaluated with exact rational arithmetic are presented.
+\end{abstract}
+
+\hrule
+\vspace{1.5em}
+
+\section{System Architecture \& Dynamic Framework}
+
+\subsection{Description of the PRR Dynamic Model}
+\paragraph{What is being done:}
+We formulate the inverse dynamic model of the spatial 3-DOF PRR manipulator. The mechanical parameters extracted from the URDF file and validated in prior assignments are summarized as follows:
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{Link 1 (Prismatic Joint, $q_1$):} Mass $m_1 = 1.0\text{ kg}$, rectangular geometry ($0.036\text{ m} \times 0.036\text{ m} \times 0.5\text{ m}$).
+    \item \textbf{Link 2 (Revolute Joint, $q_2$):} Mass $m_2 = 1.0\text{ kg}$, solid cylinder along $Z_2$ ($r = 0.019\text{ m}$, $h = 0.4\text{ m}$).
+    \item \textbf{Link 3 (Revolute Joint, $q_3$):} Mass $m_3 = 1.0\text{ kg}$, solid cylinder along $X_3$ ($r = 0.019\text{ m}$, $h = 0.4\text{ m}$).
+\end{enumerate}
+
+\paragraph{Why it is done:}
+Establishing the dynamic equations of motion is indispensable for model-based robot control, trajectory simulation, and joint actuator sizing. While kinematics maps motion geometry, dynamics couples joint forces and torques $\boldsymbol{\tau}$ to joint accelerations $\ddot{q}$, velocities $\dot{q}$, and positions $q$.
+
+\subsection{Euler-Lagrange Analytical Method}
+\paragraph{What is being done:}
+The dynamics are derived using the scalar Lagrangian function \\$\mathcal{L}(q, \dot{q}) = \mathcal{T}(q, \dot{q}) - \mathcal{U}(q)$, defined as the difference between total kinetic energy $\mathcal{T}$ and total potential energy $\mathcal{U}$. The fundamental Euler-Lagrange equations of motion are given by:
+\begin{equation}
+    \frac{d}{dt}\left(\frac{\partial \mathcal{L}}{\partial \dot{q}_i}\right) - \frac{\partial \mathcal{L}}{\partial q_i} = \tau_i, \quad i = 1, 2, 3
+\end{equation}
+
+Substituting $\mathcal{L} = \frac{1}{2}\dot{q}^T \mathbf{B}(q)\dot{q} - \mathcal{U}(q)$ into the variational formulation yields the step-by-step derivatives:
+\begin{align}
+    \left(\frac{\partial \mathcal{L}}{\partial \dot{q}}\right)^T &= \mathbf{B}(q)\dot{q} \\
+    \frac{d}{dt}\left(\frac{\partial \mathcal{L}}{\partial \dot{q}}\right)^T &= \mathbf{B}(q)\ddot{q} + \mathbf{\dot{B}}(q)\dot{q} \\
+    \left(\frac{\partial \mathcal{L}}{\partial q}\right)^T &= \frac{1}{2}\left(\frac{\partial}{\partial q}\left(\dot{q}^T \mathbf{B}(q)\dot{q}\right)\right)^T - \left(\frac{\partial \mathcal{U}}{\partial q}\right)^T
+\end{align}
+
+Combining terms yields the canonical matrix differential equation:
+\begin{equation}
+    \mathbf{B}(q)\ddot{q} + \mathbf{C}(q, \dot{q})\dot{q} + \mathbf{g}(q) = \boldsymbol{\tau}
+\end{equation}
+
+\paragraph{Why it is done:}
+The Euler-Lagrange method avoids computing internal constraint forces between links (unlike Newton-Euler vector mechanics) and directly delivers the generalized forces $\boldsymbol{\tau}$ performing work on the generalized coordinates $q$.
+
+\section{Derivation of Dynamic Matrices}
+
+\subsection{Generalized Inertia Matrix \texorpdfstring{$\mathbf{B}(q)$}{B(q)} Recapitulation}
+\paragraph{What is being done:}
+The symmetric, positive-definite inertia matrix $\mathbf{B}(q) \in \mathbb{R}^{3 \times 3}$ derived in Assignment \#2 is given symbolically by:
+\begin{equation}
+\resizebox{\linewidth}{!}{$
+\mathbf{B}(q) = \begin{bmatrix}
+m_1 + m_2 + m_3 & 0 & \frac{m_3}{5}\cos q_3 \\[0.5em]
+0 & I_{2yy} + I_{3yy}\cos^2 q_3 + I_{3xx}\sin^2 q_3 + \frac{m_3}{25}\cos^2 q_3 & 0 \\[0.5em]
+\frac{m_3}{5}\cos q_3 & 0 & I_{3zz} + \frac{m_3}{25}
+\end{bmatrix}
+$}
+\end{equation}
+
+Evaluated numerically:
+\begin{equation}
+\mathbf{B}(q) = \begin{bmatrix}
+3.0 & 0 & 0.2\cos q_3 \\
+0 & 0.1068 - 0.05324\sin^2 q_3 & 0 \\
+0.2\cos q_3 & 0 & 0.05342
+\end{bmatrix}
+\end{equation}
+
+\paragraph{Why it is done:}
+$\mathbf{B}(q)$ captures the configuration-dependent mass and inertia properties. The diagonal element $b_{ii}(q)$ represents the effective moment of inertia at joint $i$ when all other joints are locked, while off-diagonal elements $b_{ij}(q)$ represent inertial acceleration coupling between joint $j$ and joint $i$.
+
+\subsection{Coriolis and Centrifugal Matrix \texorpdfstring{$\mathbf{C}(q, \dot{q})$}{C(q, dq)} via Christoffel Symbols}
+\paragraph{What is being done:}
+To construct $\mathbf{C}(q, \dot{q})$, we compute Christoffel symbols of the first type $c_{ijk}(q)$, defined as:
+\begin{equation}
+    c_{ijk}(q) = \frac{1}{2} \left( \frac{\partial b_{ij}}{\partial q_k} + \frac{\partial b_{ik}}{\partial q_j} - \frac{\partial b_{jk}}{\partial q_i} \right)
+\end{equation}
+
+The individual entries $c_{ij}(q, \dot{q})$ of matrix $\mathbf{C}$ are computed via velocity contraction:
+\begin{equation}
+    c_{ij}(q, \dot{q}) = \sum_{k=1}^{3} c_{ijk}(q) \dot{q}_k
+\end{equation}
+
+Evaluating all $27$ Christoffel symbols yields the explicit symbolic matrix:
+\begin{equation}
+\resizebox{\linewidth}{!}{$
+\mathbf{C}(q, \dot{q}) = \begin{bmatrix}
+0 & 0 & -\frac{m_3}{5}\dot{q}_3\sin q_3 \\[0.5em]
+0 & \frac{25(I_{3xx}-I_{3yy})-m_3}{50}\dot{q}_3\sin(2q_3) & \frac{25(I_{3xx}-I_{3yy})-m_3}{50}\dot{q}_2\sin(2q_3) \\[0.5em]
+0 & \frac{-25(I_{3xx}-I_{3yy})+m_3}{50}\dot{q}_2\sin(2q_3) & 0
+\end{bmatrix}
+$}
+\end{equation}
+
+Evaluating numerically with exact rational substitution yields:
+\begin{equation}
+\mathbf{C}(q, \dot{q}) = \begin{bmatrix}
+0 & 0 & -0.2\dot{q}_3\sin q_3 \\[0.3em]
+0 & -0.02662\dot{q}_3\sin(2q_3) & -0.02662\dot{q}_2\sin(2q_3) \\[0.3em]
+0 & 0.02662\dot{q}_2\sin(2q_3) & 0
+\end{bmatrix}
+\end{equation}
+
+\paragraph{Why it is done \& Physical Interpretation:}
+\begin{itemize}[leftmargin=1.5em]
+    \item \textbf{Centrifugal Effects ($h_{ijj}\dot{q}_j^2$):} Terms proportional to $\dot{q}_j^2$ represent centrifugal forces acting on joint $i$ due to rotation of link $j$. Note $h_{iii} \equiv 0$ always.
+    \item \textbf{Coriolis Effects ($h_{ijk}\dot{q}_j\dot{q}_k$):} Terms proportional to $\dot{q}_j\dot{q}_k$ ($j \neq k$) represent Coriolis forces arising from simultaneous motion along multiple moving axes.
+    \item \textbf{Christoffel Symmetry:} $c_{ijk} = c_{ikj}$ guarantees consistency across velocity products.
+\end{itemize}
+
+\subsection{Gravity Torque Vector \texorpdfstring{$\mathbf{g}(q)$}{g(q)}}
+\paragraph{What is being done:}
+The gravity force vector $\mathbf{g}(q) \in \mathbb{R}^3$ is derived as the gradient of potential energy $\mathcal{U}(q)$:
+\begin{equation}
+    g_i(q) = \frac{\partial \mathcal{U}(q)}{\partial q_i} \implies \mathbf{g}(q) = \begin{bmatrix} g(m_1 + m_2 + m_3) \\[0.4em] 0 \\[0.4em] \frac{g m_3}{5}\cos q_3 \end{bmatrix}
+\end{equation}
+
+Substituting $g = 9.81\text{ m/s}^2$ and link masses $m_i = 1\text{ kg}$:
+\begin{equation}
+    \mathbf{g}(q) = \begin{bmatrix} 29.43 \\[0.3em] 0 \\[0.3em] 1.962\cos q_3 \end{bmatrix}
+\end{equation}
+
+\paragraph{Why it is done:}
+The gravity vector specifies the static holding forces/torques required to maintain equilibrium ($\ddot{q}=\mathbf{0}, \dot{q}=\mathbf{0}$). Joint 2 requires zero gravity torque ($g_2 = 0$) because rotation about $Z_0$ occurs purely in a horizontal plane.
+
+\section{Passivity \& Skew-Symmetry Analysis}
+
+\subsection{Matrix Derivative \texorpdfstring{$\mathbf{\dot{B}}(q)$}{B\_dot(q)} \& Skew-Symmetry Proof}
+\paragraph{What is being done:}
+We compute the time derivative of the generalized inertia matrix $\mathbf{\dot{B}}(q) = \sum_{k=1}^3 \frac{\partial \mathbf{B}}{\partial q_k} \dot{q}_k$:
+\begin{equation}
+\mathbf{\dot{B}}(q) = \begin{bmatrix}
+0 & 0 & -\frac{m_3}{5}\dot{q}_3\sin q_3 \\[0.4em]
+0 & \frac{25(I_{3xx}-I_{3yy})-m_3}{25}\dot{q}_3\sin(2q_3) & 0 \\[0.4em]
+-\frac{m_3}{5}\dot{q}_3\sin q_3 & 0 & 0
+\end{bmatrix}
+\end{equation}
+
+We then evaluate the matrix $\mathbf{N}(q, \dot{q}) = \mathbf{\dot{B}}(q) - 2\mathbf{C}(q, \dot{q})$:
+\begin{equation}
+\resizebox{\linewidth}{!}{$
+\mathbf{N}(q, \dot{q}) = \begin{bmatrix}
+0 & 0 & \frac{m_3}{5}\dot{q}_3\sin q_3 \\[0.4em]
+0 & 0 & \frac{-25(I_{3xx}-I_{3yy})+m_3}{25}\dot{q}_2\sin(2q_3) \\[0.4em]
+-\frac{m_3}{5}\dot{q}_3\sin q_3 & \frac{25(I_{3xx}-I_{3yy})-m_3}{25}\dot{q}_2\sin(2q_3) & 0
+\end{bmatrix}
+$}
+\end{equation}
+
+Checking transpose equality confirms $\mathbf{N}^T = -\mathbf{N}$, meaning $\mathbf{N} + \mathbf{N}^T = \mathbf{0}_{3\times3}$.
+
+\paragraph{Why it is done \& Control Implications:}
+Skew-symmetry of $(\mathbf{\dot{B}} - 2\mathbf{C})$ implies that for any vector $\mathbf{x} \in \mathbb{R}^3$:
+\begin{equation}
+    \mathbf{x}^T \left( \mathbf{\dot{B}}(q) - 2\mathbf{C}(q, \dot{q}) \right) \mathbf{x} = 0
+\end{equation}
+
+This fundamental property reflects conservation of energy: internal Coriolis and centrifugal forces perform zero net work on the manipulator. It is heavily exploited in constructing Lyapunov candidates for adaptive control, computed-torque control, and passivity-based control.
+
+\section{Explicit Dynamic Equations of Motion}
+
+Combining all terms into scalar equations $\tau_i = \sum_{j=1}^3 b_{ij}\ddot{q}_j + \sum_{j=1}^3 c_{ij}\dot{q}_j + g_i$ gives:
+
+\subsection{Scalar Dynamic Equations}
+\begin{align}
+    \tau_1 &= 3.0\,\ddot{q}_1 + 0.2\cos(q_3)\,\ddot{q}_3 - 0.2\sin(q_3)\,\dot{q}_3^2 + 29.43 \\
+    \tau_2 &= \left(0.1068 - 0.05324\sin^2 q_3\right)\ddot{q}_2 - 0.05324\sin(2q_3)\,\dot{q}_2\dot{q}_3 \\
+    \tau_3 &= 0.05342\,\ddot{q}_3 + 0.2\cos(q_3)\,\ddot{q}_1 + 0.02662\sin(2q_3)\,\dot{q}_2^2 + 1.962\cos(q_3)
+\end{align}
+
+\subsection{Extension to General Dynamic Model}
+If joint viscous friction $F_v \dot{q}$, Coulomb friction $F_s \text{sgn}(\dot{q})$, or an external environment wrench $h_e$ are present, the general dynamic equation expands to:
+\begin{equation}
+    \mathbf{B}(q)\ddot{q} + \mathbf{C}(q, \dot{q})\dot{q} + F_v \dot{q} + F_s \text{sgn}(\dot{q}) + \mathbf{g}(q) = \boldsymbol{\tau} - \mathbf{J}^T(q) h_e
+\end{equation}
+
+\end{document}

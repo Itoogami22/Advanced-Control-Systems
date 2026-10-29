@@ -1,25 +1,67 @@
 %% DH-Table, Direct Kinematics, Inverse Kinematics, Geometric and Analytical Jacobian
 close all; clear; clc;
 
-%% Display Robot
+%% Display Robot and Check URDF Joint Limits
 robot = importrobot('00001_PRR_zzx FILIPPO SEGALLA.urdf');
 robot.DataFormat = 'row'; % Allow joint configurations as row vectors
 showdetails(robot)
 
-fig = figure;
-config = homeConfiguration(robot);
-show(robot, config);
+% Read the position limits directly from the imported URDF model.
+joint_names = {};
+joint_limits = zeros(0, 2);
+for i = 1:numel(robot.Bodies)
+    joint = robot.Bodies{i}.Joint;
+    if ~strcmp(joint.Type, 'fixed')
+        joint_names{end + 1} = joint.Name; %#ok<SAGROW>
+        joint_limits(end + 1, :) = joint.PositionLimits; %#ok<SAGROW>
+    end
+end
+if size(joint_limits, 1) ~= 3
+    error('Expected three movable joints in the imported PRR robot.');
+end
 
-% Enable 3D plot controls (zoom, pan, rotate)
-rotate3d on;              % Enable 3D dynamic rotation with left-click drag
-cameratoolbar('Show');    % Display camera toolbar at the top
-grid on;                  % Enable grid lines for spatial reference
-axis equal;               % Keep proportional axis scaling
+fprintf('\n--- Joint Position Limits from the URDF ---\n');
+for i = 1:numel(joint_names)
+    fprintf('%s: [%.4f, %.4f]\n', joint_names{i}, ...
+        joint_limits(i, 1), joint_limits(i, 2));
+end
 
-% Set larger axis limits to center the robot in an expanded grid
-xlim([-1.0, 1.0]);        % Expand X-axis limits
-ylim([-1.0, 1.0]);        % Expand Y-axis limits
-zlim([ 0.0, 1.4]);        % Expand Z-axis limits
+% Figure 1: show the robot's home configuration.
+home_config = homeConfiguration(robot);
+figure;
+show(robot, home_config);
+title('Robot Home Configuration');
+grid on; axis equal;
+xlim([-1.0, 1.0]); ylim([-1.0, 1.0]); zlim([0.0, 1.4]);
+rotate3d on;
+
+% Figure 2: compare two example configurations and confirm both are admissible.
+example_configs = [-0.25, 5*pi/6, pi/3; ...
+                   -0.40, pi/4, -pi/3];
+example_names = {'Example configuration 1', 'Example configuration 2'};
+limit_tolerance = 1e-9;
+figure;
+for k = 1:size(example_configs, 1)
+    config = example_configs(k, :);
+    within_limits = all(config >= joint_limits(:, 1).' - limit_tolerance) && ...
+                    all(config <= joint_limits(:, 2).' + limit_tolerance);
+    if within_limits
+        limit_status = 'WITHIN LIMITS';
+    else
+        limit_status = 'OUTSIDE LIMITS';
+    end
+    fprintf('%s: q = [%.4f, %.4f, %.4f] -> %s\n', ...
+        example_names{k}, config(1), config(2), config(3), ...
+        limit_status);
+
+    ax = subplot(1, 2, k);
+    show(robot, config, 'Parent', ax);
+    title(ax, example_names{k});
+    grid(ax, 'on'); axis(ax, 'equal');
+    xlim(ax, [-1.0, 1.0]); ylim(ax, [-1.0, 1.0]); zlim(ax, [0.0, 1.4]);
+end
+rotate3d on;
+cameratoolbar('Show');
 
 %% Symbolic variables for the computations
 syms a alpha d theta real                           % Generic DH-Table parameters
@@ -110,7 +152,7 @@ fprintf("============================================================\n\n");
 % --- Numerical Example for Inverse Kinematics ---
 px_val = 0.25;
 py_val = 0.25;
-pz_val = 0.8;
+pz_val = 0.9;
 % -----------------------------------------------
 
 r_xy = simplify(sqrt(px^2 + py^2));
@@ -133,7 +175,7 @@ q1_ik_sol = [q1_b1; q1_b2];
 q2_ik_sol = [q2_b1; q2_b2];
 q3_ik_sol = [q3_b1; q3_b2];
 
-% Display analytical inverse kinematics solutions with decimal constants
+% Display and filter analytical solutions against the URDF joint limits.
 fprintf("\n--- Analytical Closed-Form Inverse Kinematics Solutions ---\n");
 for k = 1:2
     fprintf("Solution Branch %d:\n", k);
@@ -142,6 +184,9 @@ for k = 1:2
     q1_num = double(subs(q1_ik_sol(k), [px py pz], [px_val py_val pz_val]));
     q2_num = double(subs(q2_ik_sol(k), [px py pz], [px_val py_val pz_val]));
     q3_num = double(subs(q3_ik_sol(k), [px py pz], [px_val py_val pz_val]));
+    config_ik = [q1_num, q2_num, q3_num];
+    within_limits = all(config_ik >= joint_limits(:, 1).' - limit_tolerance) && ...
+                    all(config_ik <= joint_limits(:, 2).' + limit_tolerance);
 
     fprintf("Numerical Solution (px=%.2f, py=%.2f, pz=%.2f):\n", px_val, py_val, pz_val);
     fprintf("q1 = %.4f\n", q1_num);
@@ -151,11 +196,16 @@ for k = 1:2
     fprintf("q1 = %s\n", char(vpa(q1_ik_sol(k), 4)));
     fprintf("q2 = %s\n", char(vpa(q2_ik_sol(k), 4)));
     fprintf("q3 = %s\n", char(vpa(q3_ik_sol(k), 4)));
+    if ~within_limits
+        fprintf("Rejected: this mathematical solution exceeds a URDF joint limit.\n");
+        fprintf("------------------------------------------------------------\n");
+        continue;
+    end
+    fprintf("Joint-limit check: ACCEPTED.\n");
     fprintf("------------------------------------------------------------\n");
 
     % --- Visualization of the Inverse Kinematics Solution ---
     figure;
-    config_ik = [q1_num, q2_num, q3_num];
     show(robot, config_ik);
     ax = gca;
     hold on;

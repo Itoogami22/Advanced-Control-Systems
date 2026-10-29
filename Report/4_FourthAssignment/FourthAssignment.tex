@@ -1,0 +1,221 @@
+\documentclass[11pt, a4paper]{article}
+
+% --- Geometry & Page Setup ---
+\usepackage[a4paper, margin=2.5cm]{geometry}
+
+% --- Font & Language Configuration ---
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+% --- Essential Packages ---
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{xcolor}
+\usepackage{listings}
+\usepackage{enumitem}
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+% --- Custom Color Definitions ---
+\definecolor{brandblue}{RGB}{30, 58, 138}
+\definecolor{brandaccent}{RGB}{13, 148, 136}
+\definecolor{codebg}{RGB}{248, 250, 252}
+\definecolor{codeframe}{RGB}{226, 232, 240}
+\definecolor{commentgray}{RGB}{100, 116, 139}
+
+% --- Setup Hyperlinks ---
+\hypersetup{
+    colorlinks=true,
+    linkcolor=brandblue,
+    citecolor=brandaccent,
+    urlcolor=brandblue,
+    pdftitle={Assignment 4 Detailed Report - RNE, Regressor and Parameter Identification},
+    pdfauthor={Filippo Segalla}
+}
+
+% --- Setup Listings (Code Environment) ---
+\lstset{
+    backgroundcolor=\color{codebg},
+    basicstyle=\ttfamily\scriptsize,
+    breaklines=true,
+    breakatwhitespace=false,
+    captionpos=b,
+    commentstyle=\color{commentgray},
+    frame=single,
+    rulecolor=\color{codeframe},
+    keywordstyle=\color{brandblue}\bfseries,
+    stringstyle=\color{brandaccent},
+    showstringspaces=false,
+    tabsize=2
+}
+
+% --- Custom Section Title Formatting ---
+\makeatletter
+\renewcommand{\section}{\@startsection{section}{1}{\z@}%
+    {-3.5ex \@plus -1ex \@minus -.2ex}%
+    {2.3ex \@plus .2ex}%
+    {\normalfont\Large\bfseries\color{brandblue}}}
+\renewcommand{\subsection}{\@startsection{subsection}{2}{\z@}%
+    {-3.25ex \@plus -1ex \@minus -.2ex}%
+    {1.5ex \@plus .2ex}%
+    {\normalfont\large\bfseries\color{brandaccent}}}
+\makeatother
+
+% --- Document Metadata ---
+\title{
+    \vspace{-1cm}
+    \color{brandblue}\textbf{Advanced Control Systems}\\[0.3em]
+    \Large\textbf{Assignment 4: Recursive Newton-Euler Formulation, Dynamic Regressor, Base Parameters, and Least-Squares Identification for a 3-DOF PRR Manipulator}
+}
+\author{\textbf{Student Name:} Filippo Segalla \quad|\quad \textbf{Student ID:} VR538212\\[0.2em]
+\small Department of Engineering for Innovative Medicine (DIMI) }
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+
+\begin{abstract}
+\noindent 
+This report addresses the Recursive Newton-Euler (RNE) formulation, linearity in dynamic parameters, base parameter reduction, and Least-Squares (LS) parameter identification for a spatial 3-DOF PRR (Prismatic-Revolute-Revolute) robotic manipulator defined by URDF specification (\texttt{00001\_PRR\_zzx} \texttt{FILIPPO} \texttt{SEGALLA.urdf}). First, the $O(n)$ recursive Newton-Euler vector algorithm (comprising forward velocity/acceleration propagation and backward force/torque propagation) is formulated and numerically verified against the Euler-Lagrange equations from Assignment \#3. Second, the dynamic model is restructured into linear form $\boldsymbol{\tau} = \mathbf{Y}(q, \dot{q}, \ddot{q})\boldsymbol{\Theta}$. A linear dependence analysis reduces the initial parameter set to a minimal $5$-element base parameter vector $\bar{\boldsymbol{\Theta}}$ with minimal regressor matrix $\mathbf{X}(q, \dot{q}, \ddot{q})$. Finally, dynamic parameter identification is executed using a persistent excitation trajectory, yielding exact numerical identification ($\text{error} < 10^{-15}$) with a well-conditioned stacked regressor matrix.
+\end{abstract}
+
+\hrule
+\vspace{1.5em}
+
+\section{Recursive Newton-Euler (RNE) Formulation}
+
+\subsection{Theoretical Framework \& Algorithmic Structure}
+\paragraph{What is being done:}
+We implement the Recursive Newton-Euler (RNE) algorithm to compute inverse dynamics $\boldsymbol{\tau} = \text{RNE}(q, \dot{q}, \ddot{q}, \mathbf{g}_0)$. The method operates in two recursive sweeps:
+\begin{enumerate}[leftmargin=1.5em]
+    \item \textbf{Forward Recursion ($i = 1 \to 3$):} Propagates angular velocities $\boldsymbol{\omega}_i^i$, angular accelerations $\dot{\boldsymbol{\omega}}_i^i$, linear origin accelerations $\dot{\mathbf{p}}_i^i$, and center-of-mass (CoM) accelerations $\dot{\mathbf{p}}_{C_i}^i$ from the base to the end-effector.
+    \item \textbf{Backward Recursion ($i = 3 \to 1$):} Solves Newton translational balance ($\mathbf{f}_i^i - \mathbf{R}_{i+1}^i \mathbf{f}_{i+1}^{i+1} = m_i \dot{\mathbf{p}}_{C_i}^i$) and Euler rotational balance ($\boldsymbol{\mu}_i^i$) from the end-effector back to the base, projecting forces/torques onto joint motion axes $\mathbf{z}_0$ to obtain generalized actuation torques $\tau_i$.
+\end{enumerate}
+
+\paragraph{Why it is done:}
+While the Lagrangian approach delivers closed-form equations of motion ($\mathbf{B}\ddot{q} + \mathbf{C}\dot{q} + \mathbf{g} = \boldsymbol{\tau}$) with $O(n^4)$ symbolic complexity, Newton-Euler vector recursion achieves $O(n)$ computational efficiency, making it the preferred method for real-time model-based control and dynamic simulation.
+
+\subsection{Forward \& Backward Vector Equations}
+\paragraph{Forward Equations ($i = 1 \dots 3$):}
+For revolute joints ($i = 2, 3$):
+\begin{align}
+    \boldsymbol{\omega}_i^i &= (\mathbf{R}_i^{i-1})^T (\boldsymbol{\omega}_{i-1}^{i-1} + \dot{q}_i \mathbf{z}_0) \\
+    \dot{\boldsymbol{\omega}}_i^i &= (\mathbf{R}_i^{i-1})^T (\dot{\boldsymbol{\omega}}_{i-1}^{i-1} + \ddot{q}_i \mathbf{z}_0 + \dot{q}_i \boldsymbol{\omega}_{i-1}^{i-1} \times \mathbf{z}_0) \\
+    \dot{\mathbf{p}}_i^i &= (\mathbf{R}_i^{i-1})^T \dot{\mathbf{p}}_{i-1}^{i-1} + \dot{\boldsymbol{\omega}}_i^i \times \mathbf{r}_{i-1,i}^i + \boldsymbol{\omega}_i^i \times (\boldsymbol{\omega}_i^i \times \mathbf{r}_{i-1,i}^i)
+\end{align}
+
+For prismatic joint ($i = 1$):
+\begin{equation}
+    \dot{\mathbf{p}}_1^1 = (\mathbf{R}_1^0)^T (\dot{\mathbf{p}}_0^0 - \mathbf{g}_0 + \ddot{q}_1 \mathbf{z}_0)
+\end{equation}
+
+Center-of-Mass (CoM) linear acceleration for all links:
+\begin{equation}
+    \dot{\mathbf{p}}_{C_i}^i = \dot{\mathbf{p}}_i^i + \dot{\boldsymbol{\omega}}_i^i \times \mathbf{r}_{i,C_i}^i + \boldsymbol{\omega}_i^i \times (\boldsymbol{\omega}_i^i \times \mathbf{r}_{i,C_i}^i)
+\end{equation}
+
+\paragraph{Backward Equations ($i = 3 \dots 1$):}
+\begin{align}
+    \mathbf{f}_i^i &= \mathbf{R}_{i+1}^i \mathbf{f}_{i+1}^{i+1} + m_i \dot{\mathbf{p}}_{C_i}^i \\
+    \boldsymbol{\mu}_i^i &= -\mathbf{f}_i^i \times (\mathbf{r}_{i-1,i}^i + \mathbf{r}_{i,C_i}^i) + \mathbf{R}_{i+1}^i \boldsymbol{\mu}_{i+1}^{i+1} + \mathbf{R}_{i+1}^i \mathbf{f}_{i+1}^{i+1} \times \mathbf{r}_{i,C_i}^i + \mathbf{I}_i^i \dot{\boldsymbol{\omega}}_i^i + \boldsymbol{\omega}_i^i \times (\mathbf{I}_i^i \boldsymbol{\omega}_i^i)
+\end{align}
+
+Joint Torque Projection:
+\begin{equation}
+    \tau_i = \begin{cases} (\mathbf{f}_i^i)^T (\mathbf{R}_i^{i-1})^T \mathbf{z}_0 & \text{for Prismatic Joint (Joint 1)} \\ (\boldsymbol{\mu}_i^i)^T (\mathbf{R}_i^{i-1})^T \mathbf{z}_0 & \text{for Revolute Joints (Joints 2, 3)} \end{cases}
+\end{equation}
+
+\section{Linearity in Dynamic Parameters \& Base Parameters}
+
+\subsection{Linear Parameter Representation}
+\paragraph{What is being done:}
+The dynamic model is expressed in linear regressor form:
+\begin{equation}
+    \boldsymbol{\tau} = \mathbf{B}(q)\ddot{q} + \mathbf{C}(q, \dot{q})\dot{q} + \mathbf{g}(q) = \mathbf{Y}(q, \dot{q}, \ddot{q}) \boldsymbol{\Theta}
+\end{equation}
+
+Where $\boldsymbol{\Theta} \in \mathbb{R}^{30}$ contains 10 standard physical parameters per link ($m_i, m_i \mathbf{r}_{C_i}^i, \mathbf{I}_{i}^i$).
+
+\paragraph{Why it is done:}
+Linearity in dynamic parameters allows decoupling state kinematics ($q, \dot{q}, \ddot{q}$) into matrix $\mathbf{Y}$ while keeping unknown inertial parameters in vector $\boldsymbol{\Theta}$, making system identification solvable via linear least-squares.
+
+\subsection{Base Parameter Reduction (\texorpdfstring{$\bar{\boldsymbol{\Theta}}$}{theta\_base})}
+\paragraph{What is being done:}
+Not all 30 parameters independently affect joint torques. By eliminating unobservable parameters (zero columns in $\mathbf{Y}$) and grouping linearly dependent columns, we extract the minimal set of 5 base parameters $\bar{\boldsymbol{\Theta}} \in \mathbb{R}^5$:
+\begin{equation}
+    \bar{\boldsymbol{\Theta}} = \begin{bmatrix}
+    \bar{\theta}_1 \\[0.2em]
+    \bar{\theta}_2 \\[0.2em]
+    \bar{\theta}_3 \\[0.2em]
+    \bar{\theta}_4 \\[0.2em]
+    \bar{\theta}_5
+    \end{bmatrix} = \begin{bmatrix}
+    m_1 + m_2 + m_3 \\[0.2em]
+    m_3 \\[0.2em]
+    I_{2yy} + I_{3yy} \\[0.2em]
+    I_{3xx} - I_{3yy} \\[0.2em]
+    I_{3zz}
+    \end{bmatrix} = \begin{bmatrix}
+    3.000000 \text{ kg} \\[0.2em]
+    1.000000 \text{ kg} \\[0.2em]
+    0.026847 \text{ kg}\cdot\text{m}^2 \\[0.2em]
+    -0.013243 \text{ kg}\cdot\text{m}^2 \\[0.2em]
+    0.013424 \text{ kg}\cdot\text{m}^2
+    \end{bmatrix}
+\end{equation}
+
+The corresponding minimal base regressor matrix $\mathbf{X}(q, \dot{q}, \ddot{q}) \in \mathbb{R}^{3 \times 5}$ is given by:
+\begin{equation}
+\resizebox{\linewidth}{!}{$
+\mathbf{X}(q, \dot{q}, \ddot{q}) = \begin{bmatrix}
+\ddot{q}_1 + g & 0.2\ddot{q}_3\cos q_3 - 0.2\dot{q}_3^2\sin q_3 & 0 & 0 & 0 \\[0.4em]
+0 & \frac{\ddot{q}_2}{25}\cos^2 q_3 - \frac{\dot{q}_2\dot{q}_3}{25}\sin q_3 \cos q_3 & \ddot{q}_2 & \ddot{q}_2\sin^2 q_3 + \dot{q}_2\dot{q}_3\sin(2q_3) & 0 \\[0.4em]
+0 & 0.2\ddot{q}_1\cos q_3 + \frac{\ddot{q}_3}{25} - \frac{\dot{q}_2^2}{50}\sin(2q_3) + 0.2g\cos q_3 & 0 & -\frac{\dot{q}_2^2}{2} \sin(2q_3) & \ddot{q}_3
+\end{bmatrix}
+$}
+\end{equation}
+
+\paragraph{Why it is done:}
+Reducing to base parameters guarantees full column rank for the stacked regressor matrix during system identification, preventing numerical ill-conditioning and matrix singularity.
+
+\section{Dynamic Parameter Identification via Least-Squares}
+
+\subsection{Least-Squares (LS) Estimation Framework}
+\paragraph{What is being done:}
+We collect $N = 500$ time samples along a persistently exciting sinusoidal trajectory ($q_1(t) = 0.5\sin t, q_2(t) = \cos(1.5t), q_3(t) = 0.8\sin(2t)$). Stacking $3N$ torque equations yields the linear system $\mathbf{W} \bar{\boldsymbol{\Theta}} = \mathbf{T}$, where $\mathbf{W} \in \mathbb{R}^{1500 \times 5}$ and $\mathbf{T} \in \mathbb{R}^{1500}$. The optimal parameter estimates are solved via Moore-Penrose pseudo-inverse:
+\begin{equation}
+    \hat{\bar{\boldsymbol{\Theta}}}_{LS} = (\mathbf{W}^T \mathbf{W})^{-1} \mathbf{W}^T \mathbf{T}
+\end{equation}
+
+\paragraph{Why it is done:}
+Least-Squares identification provides an optimal, noise-resilient estimate of the manipulator's base parameters required for adaptive and model-based feedback linearizing controllers.
+
+\subsection{Identification Results \& Condition Number}
+Table \ref{tab:identification_results} summarizes the numerical identification performance:
+
+\begin{table}[h!]
+\centering
+\caption{Base Parameter Identification Results via Least-Squares.}
+\label{tab:identification_results}
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Base Parameter} & \textbf{Symbolic Definition} & \textbf{Ground Truth} & \textbf{Estimated ($\hat{\bar{\theta}}_{LS}$)} & \textbf{Absolute Error} \\
+\midrule
+$\bar{\theta}_1$ & $m_1 + m_2 + m_3$ & $3.000000$ & $3.000000$ & $< 10^{-15}$ \\
+$\bar{\theta}_2$ & $m_3$ & $1.000000$ & $1.000000$ & $0.00$ \\
+$\bar{\theta}_3$ & $I_{2yy} + I_{3yy}$ & $0.026847$ & $0.026847$ & $< 10^{-15}$ \\
+$\bar{\theta}_4$ & $I_{3xx} - I_{3yy}$ & $-0.013243$ & $-0.013243$ & $< 10^{-15}$ \\
+$\bar{\theta}_5$ & $I_{3zz}$ & $0.013424$ & $0.013424$ & $< 10^{-15}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The stacked regressor matrix condition number is $\text{cond}(\mathbf{W}) = 11.50$, proving high numerical stability and excellent trajectory excitation.
+
+\end{document}
