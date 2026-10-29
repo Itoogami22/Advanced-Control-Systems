@@ -17,6 +17,10 @@
 \usepackage{listings}
 \usepackage{enumitem}
 \usepackage{hyperref}
+\usepackage{graphicx}
+
+% Support compilation from either the project root or this report folder.
+\graphicspath{{Images/}{../../Images/}}
 
 % --- Custom Color Definitions ---
 \definecolor{brandblue}{RGB}{30, 58, 138}
@@ -99,6 +103,13 @@ We model a 3-degree-of-freedom (3-DOF) spatial manipulator featuring a \textbf{P
 \paragraph{Why it is done:}
 Analyzing the kinematic structure before writing equations establishes the boundary conditions for the manipulator's workspace. Identifying joint types (prismatic vs. revolute) dictates the selection of columns in velocity Jacobians and determines whether joint displacement represents a spatial offset (meters) or a rotational angle (radians).
 
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=0.8\textwidth, keepaspectratio]{RobotHomeConfiguration.png}
+    \caption{PRR manipulator in its home configuration.}
+    \label{fig:robot_home}
+\end{figure}
+
 \subsection{Joint Limits and Example Configurations}
 \paragraph{What is being done:}
 The movable-joint position limits are read from the robot URDF and checked before the kinematic calculations. The imported model specifies:
@@ -119,6 +130,13 @@ The MATLAB script prints these bounds and displays two admissible configurations
     \item $[-0.40,\,\pi/4,\,-\pi/3]$
 \end{itemize}
 The coordinates are ordered as $[q_1,q_2,q_3]$.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth, keepaspectratio]{ExamplesConfiguration.png}
+    \caption{The two admissible example configurations shown by the MATLAB script.}
+    \label{fig:example_configurations}
+\end{figure}
 
 \paragraph{Why it is done:}
 The URDF limits describe the robot's mechanically allowed range. Checking configurations against these limits prevents the visualization and inverse-kinematics output from presenting a mathematically valid pose that the physical manipulator cannot reach.
@@ -301,6 +319,13 @@ For the script's target $[p_x,p_y,p_z]=[0.25,0.25,0.9]\,\mathrm{m}$, both branch
 \text{Branch 2: } &[q_1,q_2,q_3] \approx [0.0371,-0.7854,-0.4864], &&\text{rejected}.
 \end{align*}
 Branch 2 violates the prismatic upper limit $q_1\leq 0\,\mathrm{m}$, so it is not a physically admissible robot configuration even though it solves the inverse-kinematics equations.
+
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=\textwidth, keepaspectratio]{InverseKinematics.png}
+    \caption{Inverse-kinematics visualization for the accepted elbow-up branch and target point.}
+    \label{fig:inverse_kinematics}
+\end{figure}
 
 \section{\texorpdfstring{Geometric Jacobian ($\mathbf{J}_G$)}{Geometric Jacobian (JG)}}
 
