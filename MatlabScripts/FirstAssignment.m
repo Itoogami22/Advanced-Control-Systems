@@ -35,6 +35,8 @@ grid on; axis equal;
 xlim([-1.0, 1.0]); ylim([-1.0, 1.0]); zlim([0.0, 1.4]);
 rotate3d on;
 
+fprintf("\n");
+
 % Figure 2: compare two example configurations and confirm both are admissible.
 example_configs = [-0.25, 5*pi/6, pi/3; ...
                    -0.40, pi/4, -pi/3];
@@ -62,6 +64,8 @@ for k = 1:size(example_configs, 1)
 end
 rotate3d on;
 cameratoolbar('Show');
+
+fprintf("------------------------------------------------------------\n");
 
 %% Symbolic variables for the computations
 syms a alpha d theta real                           % Generic DH-Table parameters
@@ -188,20 +192,20 @@ for k = 1:2
     within_limits = all(config_ik >= joint_limits(:, 1).' - limit_tolerance) && ...
                     all(config_ik <= joint_limits(:, 2).' + limit_tolerance);
 
-    fprintf("Numerical Solution (px=%.2f, py=%.2f, pz=%.2f):\n", px_val, py_val, pz_val);
+    fprintf("\nNumerical Solution (px=%.2f, py=%.2f, pz=%.2f):\n", px_val, py_val, pz_val);
     fprintf("q1 = %.4f\n", q1_num);
     fprintf("q2 = %.4f\n", q2_num);
     fprintf("q3 = %.4f\n", q3_num);
-    fprintf("Symbolic Form:\n");
+    fprintf("\nSymbolic Form:\n");
     fprintf("q1 = %s\n", char(vpa(q1_ik_sol(k), 4)));
     fprintf("q2 = %s\n", char(vpa(q2_ik_sol(k), 4)));
     fprintf("q3 = %s\n", char(vpa(q3_ik_sol(k), 4)));
     if ~within_limits
-        fprintf("Rejected: this mathematical solution exceeds a URDF joint limit.\n");
+        fprintf("\nJoint-limit check: REJECTED: this mathematical solution exceeds a URDF joint limit.\n");
         fprintf("------------------------------------------------------------\n");
         continue;
     end
-    fprintf("Joint-limit check: ACCEPTED.\n");
+    fprintf("\nJoint-limit check: ACCEPTED.\n");
     fprintf("------------------------------------------------------------\n");
 
     % --- Visualization of the Inverse Kinematics Solution ---
