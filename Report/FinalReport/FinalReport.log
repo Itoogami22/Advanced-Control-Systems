@@ -1,10 +1,10 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.6.11)  2 NOV 2026 14:28
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.6.11)  2 NOV 2026 14:32
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
  %&-line parsing enabled.
-**c:/Users/Lenovo/Desktop/University/AdvancedControlSystems/Report/FinalReport.tex
-(c:/Users/Lenovo/Desktop/University/AdvancedControlSystems/Report/FinalReport.tex
+**c:/Users/Lenovo/Desktop/University/AdvancedControlSystems/Report/FinalReport/FinalReport.tex
+(c:/Users/Lenovo/Desktop/University/AdvancedControlSystems/Report/FinalReport/FinalReport.tex
 LaTeX2e <2026-06-01>
 L3 programming layer <2026-05-26>
 (c:/texlive/2026/texmf-dist/tex/latex/base/article.cls
@@ -438,34 +438,34 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
  [2]
 LaTeX Font Info:    Font shape `T1/phv/m/it' in size <10> not available
 (Font)              Font shape `T1/phv/m/sl' tried instead on input line 93.
-<../Images/RobotHomeConfiguration.png, id=232, 870.75313pt x 532.99126pt>
-File: ../Images/RobotHomeConfiguration.png Graphic file (type png)
-<use ../Images/RobotHomeConfiguration.png>
-Package pdftex.def Info: ../Images/RobotHomeConfiguration.png  used on input line 113.
+<../../Images/RobotHomeConfiguration.png, id=232, 870.75313pt x 532.99126pt>
+File: ../../Images/RobotHomeConfiguration.png Graphic file (type png)
+<use ../../Images/RobotHomeConfiguration.png>
+Package pdftex.def Info: ../../Images/RobotHomeConfiguration.png  used on input line 113.
 (pdftex.def)             Requested size: 364.19667pt x 222.91953pt.
- [3{c:/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc} <../Images/RobotHomeConfiguration.png>]
+ [3{c:/texlive/2026/texmf-dist/fonts/enc/dvips/cm-super/cm-super-t1.enc} <../../Images/RobotHomeConfiguration.png>]
 LaTeX Font Info:    Trying to load font information for TS1+phv on input line 134.
  (c:/texlive/2026/texmf-dist/tex/latex/psnfss/ts1phv.fd
 File: ts1phv.fd 2020/03/25 scalable font definitions for TS1/phv.
 )
-<../Images/ExamplesConfiguration.png, id=249, 3533.2pt x 1193.45876pt>
-File: ../Images/ExamplesConfiguration.png Graphic file (type png)
-<use ../Images/ExamplesConfiguration.png>
-Package pdftex.def Info: ../Images/ExamplesConfiguration.png  used on input line 144.
+<../../Images/ExamplesConfiguration.png, id=249, 3533.2pt x 1193.45876pt>
+File: ../../Images/ExamplesConfiguration.png Graphic file (type png)
+<use ../../Images/ExamplesConfiguration.png>
+Package pdftex.def Info: ../../Images/ExamplesConfiguration.png  used on input line 144.
 (pdftex.def)             Requested size: 455.24411pt x 153.77107pt.
- [4 <../Images/ExamplesConfiguration.png (PNG copy)>] [5] [6]
-<../Images/InverseKinematics.png, id=294, 2114.90125pt x 1596.96625pt>
-File: ../Images/InverseKinematics.png Graphic file (type png)
-<use ../Images/InverseKinematics.png>
-Package pdftex.def Info: ../Images/InverseKinematics.png  used on input line 329.
+ [4 <../../Images/ExamplesConfiguration.png (PNG copy)>] [5] [6]
+<../../Images/InverseKinematics.png, id=294, 2114.90125pt x 1596.96625pt>
+File: ../../Images/InverseKinematics.png Graphic file (type png)
+<use ../../Images/InverseKinematics.png>
+Package pdftex.def Info: ../../Images/InverseKinematics.png  used on input line 329.
 (pdftex.def)             Requested size: 455.24411pt x 343.75531pt.
- [7] [8 <../Images/InverseKinematics.png (PNG copy)>] [9] [10] [11] [12]
-<../Images/KE_and_PE.png, id=375, 1180.41pt x 804.00375pt>
-File: ../Images/KE_and_PE.png Graphic file (type png)
-<use ../Images/KE_and_PE.png>
-Package pdftex.def Info: ../Images/KE_and_PE.png  used on input line 538.
+ [7] [8 <../../Images/InverseKinematics.png (PNG copy)>] [9] [10] [11] [12]
+<../../Images/KE_and_PE.png, id=375, 1180.41pt x 804.00375pt>
+File: ../../Images/KE_and_PE.png Graphic file (type png)
+<use ../../Images/KE_and_PE.png>
+Package pdftex.def Info: ../../Images/KE_and_PE.png  used on input line 538.
 (pdftex.def)             Requested size: 386.96027pt x 263.55545pt.
- [13 <../Images/KE_and_PE.png (PNG copy)>] [14] [15] [16] [17] [18] [19] [20] [21] [22] [23] [24] [25] [26] (./FinalReport.aux)
+ [13 <../../Images/KE_and_PE.png (PNG copy)>] [14] [15] [16] [17] [18] [19] [20] [21] [22] [23] [24] [25] [26] (./FinalReport.aux)
  ***********
 LaTeX2e <2026-06-01>
 L3 programming layer <2026-05-26>
@@ -475,12 +475,12 @@ Package rerunfilecheck Info: File `FinalReport.out' has not changed.
  ) 
 Here is how much of TeX's memory you used:
  14183 strings out of 467167
- 216190 string characters out of 5413691
+ 216310 string characters out of 5413691
  675402 words of memory out of 5000000
  43027 multiletter control sequences out of 15000+600000
  680361 words of font info for 121 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 74i,13n,79p,1273b,645s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 74i,13n,79p,1285b,645s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi7.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cmextra/cmmib8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy7.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/cm-super/sftt1000.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/helvetic/uhvro8a.pfb>
 Output written on FinalReport.pdf (26 pages, 781441 bytes).
 PDF statistics:
