@@ -1,18 +1,5 @@
 %% ========================================================================
-%  ADVANCED CONTROL SYSTEMS / ROBOTICS - SECOND ASSIGNMENT
-%  Kinetic Energy, Potential Energy, and Generalized Inertia Matrix B(q)
-%  File Name: SecondAssignment.m
-%  
-%  Description:
-%  This script derives the kinetic energy T(q, q_dot), potential energy U(q),
-%  and generalized inertia matrix B(q) for the 3-DOF PRR manipulator 
-%  defined by '00001_PRR_zzx FILIPPO SEGALLA.urdf'.
-%  
-%  Computation Flow:
-%    - Part 1: Purely Symbolic Formulation (Letters)
-%    - Part 2: Evaluated Numerical Formulas (Clean Decimals via Exact Rationals)
-%    - Part 3: Concrete Numerical Evaluation & 3D Robot Visualization at a
-%              Specific Sample Configuration q_sample strictly within URDF Limits
+%  ADVANCED CONTROL SYSTEMS - SECOND ASSIGNMENT
 % ========================================================================
 
 close all; clear; clc;
@@ -220,12 +207,8 @@ ylim([-1.5, 1.5]);
 zlim([-0.2, 2.0]);        
 
 %% Display Results
-fprintf('\n============================================================\n');
-fprintf('                 DYNAMIC ENERGIES: ASSIGNMENT #2            \n');
-fprintf('============================================================\n\n');
-
 fprintf('------------------------------------------------------------\n');
-fprintf('PART 1: PURELY SYMBOLIC FORMULAS (LETTERS)\n');
+fprintf('PART 1: SYMBOLIC FORMULAS (LETTERS)\n');
 fprintf('------------------------------------------------------------\n');
 
 fprintf('\n--- Inertia Matrix B(q) (3x3) ---\n');
@@ -238,7 +221,7 @@ fprintf('\n--- Potential Energy U(q) ---\n');
 disp(U_potential_symbolic);
 
 fprintf('\n------------------------------------------------------------\n');
-fprintf('PART 2: EVALUATED NUMERICAL FORMULAS (CLEAN DECIMALS)\n');
+fprintf('PART 2: EVALUATED NUMERICAL FORMULAS (q variables --> free)\n');
 fprintf('------------------------------------------------------------\n');
 
 fprintf('\n--- Evaluated Inertia Matrix B(q) (3x3) ---\n');
@@ -251,7 +234,7 @@ fprintf('\n--- Evaluated Potential Energy U(q) ---\n');
 disp(U_numeric);
 
 fprintf('\n------------------------------------------------------------\n');
-fprintf('PART 3: SAMPLE EVALUATION INSIDE URDF JOINT LIMITS\n');
+fprintf('PART 3: SAMPLE EVALUATION GIVEN A CONFIGURATION\n');
 fprintf('------------------------------------------------------------\n');
 fprintf('Sample Configuration q_sample  : [q1 = %.2f m, q2 = %.4f rad (pi/4), q3 = %.4f rad (pi/6)]^T\n', ...
     q1_sample, q2_sample, q3_sample);
