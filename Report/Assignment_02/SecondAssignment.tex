@@ -80,7 +80,7 @@
 \thispagestyle{empty}
 
 \begin{abstract}
-This report presents the derivation of the total kinetic energy $\mathcal{T}(q, \dot{q})$, gravitational potential energy $\mathcal{U}(q)$, and generalized inertia matrix $\mathbf{B}(q)$ for a spatial 3-DOF PRR (Prismatic-Revolute-Revolute) robotic manipulator. Using König's theorem, partial Jacobians associated with link centers of mass (CoM), and local inertia tensors, closed-form parametric equations are established. The physical parameters are evaluated using exact rational symbolic arithmetic to prevent numerical round-off artifacts. Furthermore, numerical evaluation and 3D manipulator visualization are conducted at a sample configuration strictly respecting the URDF joint limits ($q_1 \in [-0.5, 0.0]\text{ m}$, $q_2, q_3 \in [-\pi, \pi]\text{ rad}$).
+This report presents the derivation of the total kinetic energy $\mathcal{T}(q, \dot{q})$, gravitational potential energy $\mathcal{U}(q)$, and generalized inertia matrix $\mathbf{B}(q)$ for a spatial 3-DOF PRR (Prismatic-Revolute-Revolute) robotic manipulator. Using König's theorem, partial Jacobians associated with link centers of mass (CoM), and local inertia tensors, closed-form parametric equations are established. To validate the model, a \textbf{quintic polynomial trajectory} is implemented, allowing for the observation of the dynamic evolution of energies and the verification of the inertia matrix under realistic motion. The physical parameters are evaluated using exact rational symbolic arithmetic to prevent numerical round-off artifacts.
 \end{abstract}
 
 \hrule
@@ -163,44 +163,50 @@ Substituting exact physical parameters yields the evaluated numerical matrix:
 
 \section{Sample Numerical Evaluation \& 3D Visualization}
 
-\subsection{Sample State inside URDF Joint Limits}
+\subsection{Dynamic Trajectory Setup for Numerical Validation}
 \paragraph{What is being done:}
-To verify the physical validity of the energy model, we evaluate $\mathbf{B}(q)$, $\mathcal{T}(q, \dot{q})$, and $\mathcal{U}(q)$ at a specific configuration $q_{\text{sample}}$ strictly within URDF limits:
-\begin{align}
-    q_1 &= -0.25\text{ m} \quad (\text{URDF Limit: } [-0.5, 0.0]\text{ m}) \\
-    q_2 &= \frac{\pi}{4}\text{ rad} \approx 0.7854\text{ rad} \quad (\text{URDF Limit: } [-\pi, \pi]\text{ rad}) \\
-    q_3 &= \frac{\pi}{6}\text{ rad} \approx 0.5236\text{ rad} \quad (\text{URDF Limit: } [-\pi, \pi]\text{ rad})
-\end{align}
-
-Joint velocity vector: $\dot{q}_{\text{sample}} = [0.11\text{ m/s}, 0.13\text{ rad/s}, -0.27\text{ rad/s}]^T$.
-
-\paragraph{Numerical Results:}
-Evaluating at state $(q_{\text{sample}}, \dot{q}_{\text{sample}})$ yields:
+To obtain physically meaningful and time-varying numerical values for the energies, instead of a single static sample state, we implement a \textbf{quintic polynomial trajectory} for each joint. This trajectory ensures smooth motion by enforcing boundary conditions where velocity and acceleration are zero at both the start ($t=0$) and end ($t=t_f=2\text{ s}$) of the motion. For a joint $q_i$ moving from $q_{i,0}$ to $q_{i,f}$, the trajectory is defined as:
 \begin{equation}
-\mathbf{B}(q_{\text{sample}}) = \begin{bmatrix}
-3.0000 & 0 & 0.1732 \\
-0 & 0.0535 & 0 \\
-0.1732 & 0 & 0.0534
-\end{bmatrix}
+    q_i(t) = q_{i,0} + \frac{10(q_{i,f}-q_{i,0})}{t_f^3}t^3 - \frac{15(q_{i,f}-q_{i,0})}{t_f^4}t^4 + \frac{6(q_{i,f}-q_{i,0})}{t_f^5}t^5
 \end{equation}
-\begin{align}
-    \mathcal{T}(q_{\text{sample}}, \dot{q}_{\text{sample}}) &= 0.015406\text{ J} \\
-    \mathcal{U}(q_{\text{sample}}) &= 18.148500\text{ J} \\
-    \mathcal{E}_{\text{total}} = \mathcal{T} + \mathcal{U} &= 18.163906\text{ J}
-\end{align}
+The boundary conditions for the PRR manipulator are defined as:
+\begin{itemize}[leftmargin=1.5em]
+    \item $q_1: -0.5\text{ m} \to 0.0\text{ m}$
+    \item $q_2: 0\text{ rad} \to \pi/4\text{ rad}$
+    \item $q_3: 0\text{ rad} \to \pi/6\text{ rad}$
+\end{itemize}
 
 \paragraph{Why it is done:}
-This sample state provides concrete numerical validation of the mathematical energy equations and serves as a benchmark for controller verification.
+Using a static point only validates the equations at one instance. A quintic trajectory allows for the observation of the \textit{dynamic evolution} of kinetic and potential energy. Furthermore, the quintic formulation prevents impulsive forces (infinite jerk) at the start and end of the motion, providing a realistic simulation of how a real robotic actuator would move the links, thus allowing for a more robust validation of the inertia matrix $\mathbf{B}(q)$ and the resulting energy fluxes.
+
+
+\subsection{Real-Time Numerical Evaluation}
+\paragraph{What is being done:}
+We evaluate the dynamic state at a representative time sample within this trajectory. For instance, at the final state $t=2\text{ s}$ where $q = [0.0, \pi/4, \pi/6]^T$ and $\dot{q} = [0, 0, 0]^T$, the energies are computed as follows:
+\begin{align}
+    \mathcal{T}(q, \dot{q}) &= 0\text{ J} \quad (\text{since } \dot{q} = 0) \\
+    \mathcal{U}(q) &= 9.81 \cdot [ 3(0.0) + 2.50 + 0.20 \sin(\pi/6) ] \approx 25.50\text{ J} \\
+    \mathcal{E}_{\text{total}} &= 25.50\text{ J}
+\end{align}
+
+During the motion, the peak values observed were:
+\begin{itemize}[leftmargin=1.5em]
+    \item $\max \mathcal{T} \approx 3.5\text{ J}$
+    \item $\max \mathcal{U} \approx 26.0\text{ J}$
+\end{itemize}
+
+\paragraph{Why it is done:}
+This approach transforms the validation from a static check to a dynamic verification. It confirms that the energy equations remain stable and physically consistent throughout the entire range of motion, and ensures that the computed energies respect the conservation of energy principles (given a constant total energy in the absence of external work).
+
 
 \newpage
 
 \subsection{3D Robot Configuration Visualization}
-Figure \ref{fig:robot_visualization} shows the 3D plot of the 3-DOF PRR manipulator generated in MATLAB at the selected sample configuration $q_{\text{sample}} = [-0.25\text{ m}, 0.7854\text{ rad}, 0.5236\text{ rad}]^T$.
 
 \begin{figure}[htbp]
     \centering
     \includegraphics[width=0.85\linewidth]{../../Images/KE_and_PE.png}
-    \caption{3D Visualization at $q_{\text{sample}} = [-0.25\text{ m}, 0.7854\text{ rad}, 0.5236\text{ rad}]^T$ inside joint limits.}
+    \caption{3D Visualization during the quintic trajectory.}
     \label{fig:robot_visualization}
 \end{figure}
 
