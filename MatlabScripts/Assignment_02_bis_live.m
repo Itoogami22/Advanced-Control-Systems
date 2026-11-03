@@ -16,12 +16,15 @@ num_joints = 3;
 
 % Define symbolic variables for DH parameters and robot geometry.
 syms a alpha d theta real
+
 % Define joint positions (q) and velocities (dq).
 syms q1 q2 q3 real
 syms dq1 dq2 dq3 real
+
 % Define mass (m) and gravity (g).
 syms m1 m2 m3 real
 syms g real
+
 % Define the moment of inertia tensors for each link (diagonal matrices).
 syms I1xx I1yy I1zz real
 syms I2xx I2yy I2zz real
@@ -46,9 +49,15 @@ A = [cos(theta), -sin(theta)*cos(alpha),  sin(theta)*sin(alpha), a*cos(theta); .
      0,           0,                      0,                     1];
 
 % Base transformation matrix to position the robot correctly in the world frame.
-TB0 = [ 0, -1,  0,  0; 1,  0,  0,  0; 0,  0,  1,  0.65; 0,  0,  0,  1 ];
+TB0 = [ 0, -1,  0,  0; 
+        1,  0,  0,  0; 
+        0,  0,  1,  0.65; 
+        0,  0,  0,  1 ];
+
 % DH table: [a, alpha, d, theta] for each link.
-DH_table = [ 0, 0, q1, 0; 0, pi/2, 0.4, q2; 0.4, 0, 0, q3 ];
+DH_table = [ 0,   0,    q1,  0; 
+             0,   pi/2, 0.4, q2; 
+             0.4, 0,    0,   q3 ];
 % Specify joint types: P = Prismatic, R = Revolute.
 joint_types = ['P'; 'R'; 'R'];
 
@@ -56,6 +65,7 @@ joint_types = ['P'; 'R'; 'R'];
 T = cell(num_joints, 1);
 R = cell(num_joints, 1);
 T_curr = sym(TB0);
+
 for i = 1:num_joints
     % Substitute the DH parameters for the i-th link into the general matrix A.
     A_i = subs(A, [a, alpha, d, theta], DH_table(i,:));
@@ -69,6 +79,7 @@ end
 % Define the center of mass (COM) for each link in its local frame.
 p_l_local = {[0; 0; -0.25; 1], [0; 0; -0.20; 1], [-0.20; 0; 0; 1]};
 p_l = cell(num_joints, 1);
+
 for i = 1:num_joints
     % Transform the COM position to the world frame.
     p_l{i} = simplify(T{i} * p_l_local{i});
@@ -78,20 +89,27 @@ end
 % Derive the linear velocity (JP) and angular velocity (JO) Jacobians for each COM.
 JP_l = cell(num_joints, 1);
 JO_l = cell(num_joints, 1);
+
 z_axes = cell(num_joints+1, 1);
 p_origins = cell(num_joints+1, 1);
+
 z_axes{1} = sym(TB0(1:3, 3));
 p_origins{1} = sym(TB0(1:3, 4));
+
 for i = 1:num_joints
     z_axes{i+1} = T{i}(1:3, 3);
     p_origins{i+1} = T{i}(1:3, 4);
 end
+
+% Compute Jacobian columns based on joint type
 for i = 1:num_joints
     JP_i = sym(zeros(3, num_joints));
     JO_i = sym(zeros(3, num_joints));
+    
     for j = 1:i
         z_prev = z_axes{j};
         p_prev = p_origins{j};
+        
         if joint_types(j) == 'P'
             % Prismatic joint: linear velocity contribution, no angular contribution.
             JP_i(:, j) = z_prev; JO_i(:, j) = [0; 0; 0];
@@ -100,12 +118,15 @@ for i = 1:num_joints
             JP_i(:, j) = cross(z_prev, (p_l{i} - p_prev)); JO_i(:, j) = z_prev;
         end
     end
-    JP_l{i} = simplify(JP_i); JO_l{i} = simplify(JO_i);
+    
+    JP_l{i} = simplify(JP_i); 
+    JO_l{i} = simplify(JO_i);
 end
 
 % Calculate the Symbolic Inertia Matrix B(q).
 % B = sum( m_i * Jp_i' * Jp_i + Jo_i' * R_i * I_local_i * R_i' * Jo_i )
 B_symbolic = sym(zeros(num_joints, num_joints));
+
 for i = 1:num_joints
     B_symbolic = B_symbolic + m(i) * (JP_l{i}' * JP_l{i}) + JO_l{i}' * R{i} * I_local{i} * R{i}' * JO_l{i};
 end
@@ -133,10 +154,19 @@ disp(simplify(U_potential_symbolic));
 fprintf('============================================================\n\n');
 
 % Numerical values for masses and inertia tensors for simulation.
-m1_val = sym(1); m2_val = sym(1); m3_val = sym(1); g_val = sym('981/100');
-I1xx_val = sym('1/12')*m1_val*(sym('36/1000')^2+sym('1/2')^2); I1yy_val = I1xx_val; I1zz_val = sym('1/12')*m1_val*(sym('36/1000')^2+sym('36/1000')^2);
-I2xx_val = sym('1/12')*m2_val*(3*sym('19/1000')^2+sym('4/10')^2); I2yy_val = I2xx_val; I2zz_val = sym('1/2')*m2_val*(sym('19/1000')^2);
-I3xx_val = sym('1/2')*m3_val*(sym('19/1000')^2); I3yy_val = sym('1/12')*m3_val*(3*sym('19/1000')^2+sym('4/10')^2); I3zz_val = I3yy_val;
+m1_val = sym(1); m2_val = sym(1); m3_val = sym(1); 
+g_val = sym('981/100');
+I1xx_val = sym('1/12')*m1_val*(sym('36/1000')^2+sym('1/2')^2); 
+I1yy_val = I1xx_val; 
+I1zz_val = sym('1/12')*m1_val*(sym('36/1000')^2+sym('36/1000')^2);
+
+I2xx_val = sym('1/12')*m2_val*(3*sym('19/1000')^2+sym('4/10')^2); 
+I2yy_val = I2xx_val; 
+I2zz_val = sym('1/2')*m2_val*(sym('19/1000')^2);
+
+I3xx_val = sym('1/2')*m3_val*(sym('19/1000')^2); 
+I3yy_val = sym('1/12')*m3_val*(3*sym('19/1000')^2+sym('4/10')^2); 
+I3zz_val = I3yy_val;
 
 % Map symbolic variables to their numerical values for substitutions.
 sym_vars = [m1, m2, m3, g, I1xx, I1yy, I1zz, I2xx, I2yy, I2zz, I3xx, I3yy, I3zz];
@@ -148,11 +178,13 @@ U_num_exact = subs(U_potential_symbolic, sym_vars, num_vals);
 
 %% 3. Trajectory Setup
 % Simulation time parameters.
-t_start = 0; t_end = 2;
+t_start = 0; t_end = 3.0;
 t_vec = linspace(t_start, t_end, 100);
 
 % Boundary conditions for the quintic polynomial trajectory (start and end positions).
-q1_0 = -0.5; q1_f = 0.0; q2_0 = 0; q2_f = pi/4; q3_0 = 0; q3_f = pi/6;
+q1_0 = -0.5; q1_f = 0.0; 
+q2_0 = 0; q2_f = pi/4; 
+q3_0 = 0; q3_f = pi/6;
 
 % Quintic polynomial function to ensure smooth motion (zero velocity and acceleration at start/end).
 % Returns [position, velocity, acceleration].
@@ -213,7 +245,7 @@ xlim([t_start, t_end]);
 ylim([9.81, 30]);
 
 %% 5. Live Execution Loop
-% Preallocate arrays to store history and optimize performance (avoiding SAGROW warnings).
+% Preallocate arrays to store history and optimize performance
 t_hist = zeros(1, length(t_vec));
 q1_hist = zeros(1, length(t_vec));
 q2_hist = zeros(1, length(t_vec));
@@ -222,28 +254,40 @@ T_hist = zeros(1, length(t_vec));
 U_hist = zeros(1, length(t_vec));
 E_hist = zeros(1, length(t_vec));
 
-fprintf('Starting synchronized animation...\n');
+fprintf('\nCompiling symbolic expressions into numeric functions for faster execution...\n');
+T_func = matlabFunction(T_num_exact, 'Vars', [q1; q2; q3; dq1; dq2; dq3]);
+U_func = matlabFunction(U_num_exact, 'Vars', [q1; q2; q3]);
+fprintf('Compilation complete! Starting synchronized animation...\n');
+
+% ---GRAPHICS OPTIMIZATION---
+q_init = [q1_0; q2_0; q3_0];
+show(robot, q_init, 'Parent', ax_robot, 'PreservePlot', false);
+h_title = title(ax_robot, 'Live Robot Pose - Time: 0.00 s', 'Color', 'w');
+
+% --- STARTING REAL TIMER ---
+sync_timer = tic;
 
 for k = 1:length(t_vec)
     t = t_vec(k);
 
-    % Update Robot State using the quintic trajectory function.
+    % Update Robot State using the quintic trajectory function
     r1 = get_quintic(q1_0, q1_f, t_end, t);
     r2 = get_quintic(q2_0, q2_f, t_end, t);
     r3 = get_quintic(q3_0, q3_f, t_end, t);
+    
     q_curr = [r1(1); r2(1); r3(1)];
     dq_curr = [r1(2); r2(2); r3(2)];
 
-    % Update the 3D robot visualization in the corresponding subplot.
-    show(robot, q_curr, 'Parent', ax_robot, 'PreservePlot', false, 'Frames', 'on');
-    title(ax_robot, sprintf('Live Robot Pose - Time: %.2f s', t), 'Color', 'w');
+    % GRAPHIC UPDATE
+    show(robot, q_curr, 'Parent', ax_robot, 'FastUpdate', true, 'PreservePlot', false);
+    set(h_title, 'String', sprintf('Live Robot Pose - Time: %.2f s', t));
 
-    % Calculate instantaneous Energy values by substituting current state into symbolic formulas.
-    T_val = double(subs(T_num_exact, [q1; q2; q3; dq1; dq2; dq3], [q_curr; dq_curr]));
-    U_val = double(subs(U_num_exact, [q1; q2; q3], q_curr));
+    % Calculate instantaneous Energy values
+    T_val = T_func(q_curr(1), q_curr(2), q_curr(3), dq_curr(1), dq_curr(2), dq_curr(3));
+    U_val = U_func(q_curr(1), q_curr(2), q_curr(3));
     E_val = T_val + U_val;
 
-    % Store values in history arrays for plotting.
+    % Store values in history arrays
     t_hist(k) = t;
     q1_hist(k) = q_curr(1);
     q2_hist(k) = q_curr(2);
@@ -252,7 +296,7 @@ for k = 1:length(t_vec)
     U_hist(k) = U_val;
     E_hist(k) = E_val;
 
-    % Update the graphs in real-time by updating the X and Y data of the plot handles.
+    % Update the graphs in real-time
     set(h_q1, 'XData', t_hist(1:k), 'YData', q1_hist(1:k));
     set(h_q2, 'XData', t_hist(1:k), 'YData', q2_hist(1:k));
     set(h_q3, 'XData', t_hist(1:k), 'YData', q3_hist(1:k));
@@ -260,9 +304,17 @@ for k = 1:length(t_vec)
     set(h_u, 'XData', t_hist(1:k), 'YData', U_hist(1:k));
     set(h_e, 'XData', t_hist(1:k), 'YData', E_hist(1:k));
 
-    % Force MATLAB to redraw the figure window to ensure synchronization.
-    drawnow;
-    pause(0.03); % Small delay to control animation speed.
+    drawnow limitrate; % Frame rendering
+
+    % --- REAL TIME SYNCHRONIZATION ---
+    elapsed_time = toc(sync_timer);
+    
+    % If computation and rendering were faster than real time, pause MATLAB
+    % to align it exactly with the simulation time 't'.
+    time_to_wait = t - elapsed_time;
+    if time_to_wait > 0
+        pause(time_to_wait);
+    end
 end
 
 %% 6. Console Output (Summary Results)
