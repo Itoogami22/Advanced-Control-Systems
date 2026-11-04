@@ -31,68 +31,65 @@
 \contentsline {paragraph}{Why it is done:}{10}{section*.19}%
 \contentsline {section}{\numberline {2}Assignment 2}{11}{section.2}%
 \contentsline {subsection}{\numberline {2.1}System Architecture \& Mass Properties}{11}{subsection.2.1}%
-\contentsline {subsubsection}{\numberline {2.1.1}Kinematic and Dynamic Parameter Specifications}{11}{subsubsection.2.1.1}%
 \contentsline {paragraph}{What is being done:}{11}{section*.20}%
-\contentsline {paragraph}{Why it is done:}{11}{section*.21}%
-\contentsline {subsection}{\numberline {2.2}Energy Derivation via Lagrangian Mechanics}{11}{subsection.2.2}%
-\contentsline {subsubsection}{\numberline {2.2.1}Kinetic Energy $\mathcal {T}(q, \dot {q})$ Formulation}{11}{subsubsection.2.2.1}%
-\contentsline {paragraph}{What is being done:}{11}{section*.22}%
-\contentsline {paragraph}{Why it is done:}{11}{section*.23}%
-\contentsline {subsubsection}{\numberline {2.2.2}Potential Energy $\mathcal {U}(q)$ Formulation}{12}{subsubsection.2.2.2}%
-\contentsline {paragraph}{What is being done:}{12}{section*.24}%
-\contentsline {paragraph}{Why it is done:}{12}{section*.25}%
-\contentsline {subsection}{\numberline {2.3}Symbolic and Numerical Matrix Expressions}{12}{subsection.2.3}%
-\contentsline {subsubsection}{\numberline {2.3.1}Closed-Form Inertia Matrix $\mathbf {B}(q)$}{12}{subsubsection.2.3.1}%
-\contentsline {subsection}{\numberline {2.4}Sample Numerical Evaluation \& 3D Visualization}{12}{subsection.2.4}%
-\contentsline {subsubsection}{\numberline {2.4.1}Dynamic Trajectory Setup for Numerical Validation}{12}{subsubsection.2.4.1}%
-\contentsline {paragraph}{What is being done:}{12}{section*.26}%
-\contentsline {paragraph}{Why it is done:}{13}{section*.27}%
-\contentsline {subsubsection}{\numberline {2.4.2}Real-Time Numerical Evaluation}{13}{subsubsection.2.4.2}%
-\contentsline {paragraph}{What is being done:}{13}{section*.28}%
-\contentsline {paragraph}{Why it is done:}{13}{section*.29}%
-\contentsline {subsection}{\numberline {2.5}3D Robot Configuration Visualization}{14}{subsection.2.5}%
-\contentsline {section}{\numberline {3}Assignment 3}{15}{section.3}%
-\contentsline {subsection}{\numberline {3.1}System Architecture \& Dynamic Framework}{15}{subsection.3.1}%
-\contentsline {paragraph}{What is being done:}{15}{section*.30}%
-\contentsline {paragraph}{Why it is done:}{15}{section*.31}%
+\contentsline {paragraph}{Huygens-Steiner Parallel Axis Formulation:}{11}{section*.21}%
+\contentsline {paragraph}{Why it is done:}{11}{section*.22}%
+\contentsline {subsection}{\numberline {2.2}Kinetic Energy $\mathcal {T}(q, \dot {q})$ Formulation}{11}{subsection.2.2}%
+\contentsline {paragraph}{What is being done:}{11}{section*.23}%
+\contentsline {paragraph}{Why it is done:}{12}{section*.24}%
+\contentsline {subsection}{\numberline {2.3}Potential Energy $\mathcal {U}(q)$ Formulation}{12}{subsection.2.3}%
+\contentsline {paragraph}{What is being done:}{12}{section*.25}%
+\contentsline {paragraph}{Why it is done:}{12}{section*.26}%
+\contentsline {subsection}{\numberline {2.4}Symbolic and Numerical Matrix Expressions}{12}{subsection.2.4}%
+\contentsline {subsection}{\numberline {2.5}Dynamic Trajectory Setup for Numerical Validation}{12}{subsection.2.5}%
+\contentsline {paragraph}{What is being done:}{12}{section*.27}%
+\contentsline {paragraph}{Why it is done:}{13}{section*.28}%
+\contentsline {subsection}{\numberline {2.6}Real-Time Numerical Evaluation}{13}{subsection.2.6}%
+\contentsline {paragraph}{What is being done:}{13}{section*.29}%
+\contentsline {paragraph}{Why it is done:}{13}{section*.30}%
+\contentsline {subsection}{\numberline {2.7}3D Robot Configuration Visualization}{13}{subsection.2.7}%
+\contentsline {section}{\numberline {3}Assignment 3}{14}{section.3}%
+\contentsline {subsection}{\numberline {3.1}System Architecture \& Dynamic Framework}{14}{subsection.3.1}%
+\contentsline {paragraph}{What is being done:}{14}{section*.31}%
+\contentsline {paragraph}{Why it is done:}{15}{section*.32}%
 \contentsline {subsection}{\numberline {3.2}Euler-Lagrange Analytical Method}{15}{subsection.3.2}%
-\contentsline {paragraph}{What is being done:}{15}{section*.32}%
-\contentsline {paragraph}{Why it is done:}{16}{section*.33}%
-\contentsline {subsection}{\numberline {3.3}Derivation of Dynamic Matrices}{16}{subsection.3.3}%
-\contentsline {paragraph}{What is being done:}{16}{section*.34}%
-\contentsline {paragraph}{Why it is done:}{16}{section*.35}%
+\contentsline {paragraph}{What is being done:}{15}{section*.33}%
+\contentsline {paragraph}{Why it is done:}{15}{section*.34}%
+\contentsline {subsection}{\numberline {3.3}Derivation of Dynamic Matrices}{15}{subsection.3.3}%
+\contentsline {paragraph}{What is being done:}{15}{section*.35}%
+\contentsline {paragraph}{Why it is done:}{15}{section*.36}%
 \contentsline {subsection}{\numberline {3.4}Coriolis and Centrifugal Matrix $\mathbf {C}(q, \dot {q})$ via Christoffel Symbols}{16}{subsection.3.4}%
-\contentsline {paragraph}{What is being done:}{16}{section*.36}%
-\contentsline {paragraph}{Why it is done \& Physical Interpretation:}{17}{section*.37}%
-\contentsline {subsection}{\numberline {3.5}Gravity Torque Vector $\mathbf {g}(q)$}{17}{subsection.3.5}%
-\contentsline {paragraph}{What is being done:}{17}{section*.38}%
-\contentsline {paragraph}{Why it is done:}{17}{section*.39}%
+\contentsline {paragraph}{What is being done:}{16}{section*.37}%
+\contentsline {paragraph}{Why it is done \& Physical Interpretation:}{16}{section*.38}%
+\contentsline {subsection}{\numberline {3.5}Gravity Torque Vector $\mathbf {g}(q)$}{16}{subsection.3.5}%
+\contentsline {paragraph}{What is being done:}{16}{section*.39}%
+\contentsline {paragraph}{Why it is done:}{16}{section*.40}%
 \contentsline {subsection}{\numberline {3.6}Passivity \& Skew-Symmetry Analysis}{17}{subsection.3.6}%
-\contentsline {paragraph}{What is being done:}{17}{section*.40}%
-\contentsline {paragraph}{Why it is done \& Control Implications:}{18}{section*.41}%
-\contentsline {subsection}{\numberline {3.7}Explicit Dynamic Equations of Motion}{18}{subsection.3.7}%
-\contentsline {subsection}{\numberline {3.8}Scalar Dynamic Equations}{18}{subsection.3.8}%
-\contentsline {subsection}{\numberline {3.9}Extension to General Dynamic Model}{18}{subsection.3.9}%
-\contentsline {section}{\numberline {4}Assignment 4}{19}{section.4}%
-\contentsline {subsection}{\numberline {4.1}Recursive Newton-Euler (RNE) Formulation}{19}{subsection.4.1}%
-\contentsline {paragraph}{What is being done:}{19}{section*.42}%
-\contentsline {paragraph}{Why it is done:}{19}{section*.43}%
-\contentsline {subsection}{\numberline {4.2}Forward \& Backward Vector Equations}{19}{subsection.4.2}%
-\contentsline {paragraph}{Forward Equations ($i = 1 \dots 3$):}{19}{section*.44}%
-\contentsline {paragraph}{Backward Equations ($i = 3 \dots 1$):}{20}{section*.45}%
-\contentsline {subsection}{\numberline {4.3}Linearity in Dynamic Parameters \& Base Parameters}{20}{subsection.4.3}%
-\contentsline {paragraph}{What is being done:}{20}{section*.46}%
-\contentsline {paragraph}{Why it is done:}{20}{section*.47}%
-\contentsline {subsection}{\numberline {4.4}Base Parameter Reduction ($\bar {\boldsymbol {\Theta }}$)}{20}{subsection.4.4}%
-\contentsline {paragraph}{What is being done:}{20}{section*.48}%
-\contentsline {paragraph}{Why it is done:}{20}{section*.49}%
-\contentsline {subsection}{\numberline {4.5}Dynamic Parameter Identification via Least-Squares}{20}{subsection.4.5}%
-\contentsline {paragraph}{What is being done:}{20}{section*.50}%
-\contentsline {paragraph}{Why it is done:}{21}{section*.51}%
-\contentsline {subsection}{\numberline {4.6}Identification Results \& Condition Number}{21}{subsection.4.6}%
-\contentsline {section}{\numberline {5}Assignment 5}{22}{section.5}%
-\contentsline {section}{\numberline {6}Assignment 6}{23}{section.6}%
-\contentsline {section}{\numberline {7}Assignment 7}{24}{section.7}%
-\contentsline {section}{\numberline {8}Assignment 8}{25}{section.8}%
-\contentsline {section}{\numberline {9}Assignment 9}{26}{section.9}%
-\contentsline {section}{\numberline {10}Assignment 10}{27}{section.10}%
+\contentsline {paragraph}{What is being done:}{17}{section*.41}%
+\contentsline {paragraph}{Why it is done \& Control Implications:}{17}{section*.42}%
+\contentsline {subsection}{\numberline {3.7}Explicit Dynamic Equations of Motion}{17}{subsection.3.7}%
+\contentsline {subsection}{\numberline {3.8}Scalar Dynamic Equations}{17}{subsection.3.8}%
+\contentsline {subsection}{\numberline {3.9}Extension to General Dynamic Model}{17}{subsection.3.9}%
+\contentsline {section}{\numberline {4}Assignment 4}{18}{section.4}%
+\contentsline {subsection}{\numberline {4.1}Recursive Newton-Euler (RNE) Formulation}{18}{subsection.4.1}%
+\contentsline {paragraph}{What is being done:}{18}{section*.43}%
+\contentsline {paragraph}{Why it is done:}{18}{section*.44}%
+\contentsline {subsection}{\numberline {4.2}Forward \& Backward Vector Equations}{18}{subsection.4.2}%
+\contentsline {paragraph}{Forward Equations ($i = 1 \dots 3$):}{18}{section*.45}%
+\contentsline {paragraph}{Backward Equations ($i = 3 \dots 1$):}{19}{section*.46}%
+\contentsline {subsection}{\numberline {4.3}Linearity in Dynamic Parameters \& Base Parameters}{19}{subsection.4.3}%
+\contentsline {paragraph}{What is being done:}{19}{section*.47}%
+\contentsline {paragraph}{Why it is done:}{19}{section*.48}%
+\contentsline {subsection}{\numberline {4.4}Base Parameter Reduction ($\bar {\boldsymbol {\Theta }}$)}{19}{subsection.4.4}%
+\contentsline {paragraph}{What is being done:}{19}{section*.49}%
+\contentsline {paragraph}{Why it is done:}{19}{section*.50}%
+\contentsline {subsection}{\numberline {4.5}Dynamic Parameter Identification via Least-Squares}{19}{subsection.4.5}%
+\contentsline {paragraph}{What is being done:}{19}{section*.51}%
+\contentsline {paragraph}{Why it is done:}{20}{section*.52}%
+\contentsline {subsection}{\numberline {4.6}Identification Results \& Condition Number}{20}{subsection.4.6}%
+\contentsline {section}{\numberline {5}Assignment 5}{21}{section.5}%
+\contentsline {section}{\numberline {6}Assignment 6}{22}{section.6}%
+\contentsline {section}{\numberline {7}Assignment 7}{23}{section.7}%
+\contentsline {section}{\numberline {8}Assignment 8}{24}{section.8}%
+\contentsline {section}{\numberline {9}Assignment 9}{25}{section.9}%
+\contentsline {section}{\numberline {10}Assignment 10}{26}{section.10}%

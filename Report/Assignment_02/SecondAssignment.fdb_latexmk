@@ -1,10 +1,10 @@
 # Fdb version 4
-["pdflatex"] 1793642983.60186 "c:/Users/Lenovo/Desktop/University/AdvancedControlSystems/Report/Assignment_02/SecondAssignment.tex" "SecondAssignment.pdf" "SecondAssignment" 1793642984.47919 0
+["pdflatex"] 1793799669.59741 "c:/Users/Lenovo/Desktop/University/AdvancedControlSystems/Report/Assignment_02/SecondAssignment.tex" "SecondAssignment.pdf" "SecondAssignment" 1793799671.2776 0
   "../../Images/KE_and_PE.png" 1793622872 65711 7eaebfad40d53a4e5b75b3d2693fb4d7 ""
-  "SecondAssignment.aux" 1793642984 3175 4f0485b32ccf9dad96a90324ee7f2996 "pdflatex"
-  "SecondAssignment.out" 1793642984 2850 6bd797019f8a822998c93d58641ef112 "pdflatex"
-  "SecondAssignment.tex" 1793642982 10793 5f1417ad9af4cd20d89a03210c4f65e8 ""
-  "c:/Users/Lenovo/Desktop/University/AdvancedControlSystems/Report/Assignment_02/SecondAssignment.tex" 1793642982 10793 5f1417ad9af4cd20d89a03210c4f65e8 ""
+  "SecondAssignment.aux" 1793799671 3495 4ea2f6a36e66e9e3711547ea69d7ccb4 "pdflatex"
+  "SecondAssignment.out" 1793799671 2658 b1edd9e3c3c54c50dcde300703ed5988 "pdflatex"
+  "SecondAssignment.tex" 1793799666 13963 81b23a002ccd759e90984bd448a11503 ""
+  "c:/Users/Lenovo/Desktop/University/AdvancedControlSystems/Report/Assignment_02/SecondAssignment.tex" 1793799666 13963 81b23a002ccd759e90984bd448a11503 ""
   "c:/texlive/2026/texmf-dist/fonts/enc/dvips/base/8r.enc" 1781174918 4850 80dc9bab7f31fb78a000ccfed0e27cab ""
   "c:/texlive/2026/texmf-dist/fonts/map/fontname/texfonts.map" 1781175329 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "c:/texlive/2026/texmf-dist/fonts/tfm/adobe/helvetic/phvb8r.tfm" 1781175631 4484 b828043cbd581d289d955903c1339981 ""
@@ -58,6 +58,7 @@
   "c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1781173682 35752 024fb6c41858982481f6968b5fc26508 ""
   "c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb" 1781173682 32722 d7379af29a190c3f453aba36302ff5a9 ""
   "c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb" 1781173682 32734 69e00a6b65cedb993666e42eedb3d48f ""
+  "c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb" 1781173682 32762 7fee39e011c23b3589931effd97b9702 ""
   "c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb" 1781173682 32726 39f0f9e62e84beb801509898a605dbd5 ""
   "c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1781173682 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb" 1781173682 32626 5abc8bb2f28aa647d4c70f8ea38cc0d3 ""

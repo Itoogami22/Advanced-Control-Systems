@@ -128,7 +128,7 @@ end
 B_symbolic = sym(zeros(num_joints, num_joints));
 
 for i = 1:num_joints
-    B_symbolic = B_symbolic + m(i) * (JP_l{i}' * JP_l{i}) + JO_l{i}' * R{i} * I_local{i} * R{i}' * JO_l{i};
+    B_symbolic = B_symbolic + m(i) * (JP_l{i}' * JP_l{i}) + JO_l{i}' * R{i} * I_local{i} * R{i}' * JO_l{i}; % I_local{i} for the revolute on one side (Steiner)
 end
 
 % Define the total Kinetic Energy T = 0.5 * dq' * B * dq.
@@ -178,7 +178,7 @@ U_num_exact = subs(U_potential_symbolic, sym_vars, num_vals);
 
 %% 3. Trajectory Setup
 % Simulation time parameters.
-t_start = 0; t_end = 3.0;
+t_start = 0; t_end = 5.0;
 t_vec = linspace(t_start, t_end, 100);
 
 % Boundary conditions for the quintic polynomial trajectory (start and end positions).
