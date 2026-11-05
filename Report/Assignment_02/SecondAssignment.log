@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.6.11)  4 NOV 2026 14:41
+This is pdfTeX, Version 3.141592653-2.6-1.40.29 (TeX Live 2026) (preloaded format=pdflatex 2026.6.11)  5 NOV 2026 21:33
 entering extended mode
  restricted \write18 enabled.
  file:line:error style messages enabled.
@@ -437,13 +437,13 @@ File: ts1phv.fd 2020/03/25 scalable font definitions for TS1/phv.
 )
 LaTeX Font Info:    Font shape `T1/phv/m/it' in size <10.95> not available
 (Font)              Font shape `T1/phv/m/sl' tried instead on input line 206.
- [3]
-<../../Images/KE_and_PE.png, id=100, 1180.41pt x 804.00375pt>
+ [3] [4]
+<../../Images/KE_and_PE.png, id=111, 1180.41pt x 804.00375pt>
 File: ../../Images/KE_and_PE.png Graphic file (type png)
 <use ../../Images/KE_and_PE.png>
-Package pdftex.def Info: ../../Images/KE_and_PE.png  used on input line 230.
+Package pdftex.def Info: ../../Images/KE_and_PE.png  used on input line 231.
 (pdftex.def)             Requested size: 386.96027pt x 263.55545pt.
- [4] [5 <../../Images/KE_and_PE.png (PNG copy)>] (./SecondAssignment.aux)
+ [5 <../../Images/KE_and_PE.png (PNG copy)>] (./SecondAssignment.aux)
  ***********
 LaTeX2e <2026-06-01>
 L3 programming layer <2026-05-26>
@@ -460,7 +460,7 @@ Here is how much of TeX's memory you used:
  1141 hyphenation exceptions out of 8191
  74i,11n,79p,914b,466s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi6.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr6.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmr8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy8.pfb><c:/texlive/2026/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/helvetic/uhvb8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/helvetic/uhvr8a.pfb><c:/texlive/2026/texmf-dist/fonts/type1/urw/helvetic/uhvro8a.pfb>
-Output written on SecondAssignment.pdf (5 pages, 260222 bytes).
+Output written on SecondAssignment.pdf (5 pages, 260250 bytes).
 PDF statistics:
  210 PDF objects out of 1000 (max. 8388607)
  162 compressed objects within 2 object streams

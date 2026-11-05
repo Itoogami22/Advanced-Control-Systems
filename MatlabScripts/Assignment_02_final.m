@@ -189,7 +189,7 @@ U_num_exact = subs(U_potential_symbolic, sym_vars, num_vals);
 
 %% 3. Trajectory Setup
 % Simulation time parameters.
-t_start = 0; t_end = 5.0;
+t_start = 0; t_end = 2.0;
 t_vec = linspace(t_start, t_end, 100);
 
 % Boundary conditions for the quintic polynomial trajectory.
