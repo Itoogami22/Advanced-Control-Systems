@@ -1,11 +1,13 @@
 %% ========================================================================
-%  Dynamic Equations of Motion (Euler-Lagrange Formulation) for PRR Manipulator
+%  ADVANCED CONTROL SYSTEMS - ASSIGNMENT 3 (MATLAB DESKTOP VERSION)
+%  Euler-Lagrange Dynamic Equations of Motion for 3-DOF PRR Manipulator
 % ========================================================================
 
 close all; clear; clc;
 
-%% Robot Import and Interactive 3D Visualization
+%% 1. Robot Import and Interactive 3D Visualization
 robot = importrobot('00001_PRR_zzx FILIPPO SEGALLA.urdf');
+robot.DataFormat = 'column';
 showdetails(robot)
 
 fig = figure('Name', 'PRR Robot Visualization - Assignment 3', 'NumberTitle', 'off');
@@ -21,7 +23,7 @@ xlim([-1.5, 1.5]);
 ylim([-1.5, 1.5]);        
 zlim([-0.2, 2.0]);        
 
-%% Symbolic Variables Definition
+%% 2. Symbolic Variables Definition
 num_joints = 3;           
 
 % Symbolic variables for DH parameters
@@ -53,7 +55,7 @@ I_local{1} = diag([I1xx, I1yy, I1zz]);
 I_local{2} = diag([I2xx, I2yy, I2zz]);
 I_local{3} = diag([I3xx, I3yy, I3zz]);
 
-%% Direct Kinematics and Transformation Matrices (DH)
+%% 3. Forward Kinematics and DH Transformation Matrices (Exact Rationals)
 A = [cos(theta), -sin(theta)*cos(alpha),  sin(theta)*sin(alpha), a*cos(theta); ...
      sin(theta),  cos(theta)*cos(alpha), -cos(theta)*sin(alpha), a*sin(theta); ...
      0,           sin(alpha),             cos(alpha),            d; ...
@@ -61,12 +63,13 @@ A = [cos(theta), -sin(theta)*cos(alpha),  sin(theta)*sin(alpha), a*cos(theta); .
 
 TB0 = [ 0, -1,  0,  0;
         1,  0,  0,  0;
-        0,  0,  1,  0.65;
+        0,  0,  1,  sym('65/100');
         0,  0,  0,  1 ];
 
-DH_table = [ 0,    0,     q1,   0;
-             0,    pi/2,  0.4,  q2;
-             0.4,  0,     0,    q3 ];
+% Direct use of exact rational fractions to prevent floating point noise
+DH_table = [ 0,               0,             q1,             0;
+             0,               sym(pi)/2,     sym('4/10'),    q2;
+             sym('4/10'),     0,             0,              q3 ];
 
 joint_types = ['P'; 'R'; 'R'];                     
 
@@ -81,8 +84,8 @@ for i = 1:num_joints
     R{i} = T{i}(1:3, 1:3);                         
 end
 
-%% Center of Mass (CoM) Positions in Base Frame Sigma_0
-p_l_local = {[0; 0; -0.25; 1], [0; 0; -0.20; 1], [-0.20; 0; 0; 1]};
+%% 4. Center of Mass (CoM) Positions & Partial Jacobians
+p_l_local = {[0; 0; -sym('1/4'); 1], [0; 0; -sym('1/5'); 1], [-sym('1/5'); 0; 0; 1]};
 p_l = cell(num_joints, 1);
 
 for i = 1:num_joints
@@ -90,7 +93,6 @@ for i = 1:num_joints
     p_l{i} = p_temp(1:3);
 end
 
-%% Partial Jacobians for Link CoMs (JP_li, JO_li)
 JP_l = cell(num_joints, 1);
 JO_l = cell(num_joints, 1);
 
@@ -126,19 +128,28 @@ for i = 1:num_joints
     JO_l{i} = simplify(JO_i);
 end
 
-%% Generalized Inertia Matrix B(q) Computation (Symbolic Letters)
-B_symbolic = sym(zeros(num_joints, num_joints));
-
+%% 5. Computation of Steiner Inertia Tensors & Generalized Inertia Matrix B(q)
+I_steiner = cell(num_joints, 1);
 for i = 1:num_joints
-    B_symbolic = B_symbolic + m(i) * (JP_l{i}' * JP_l{i}) + JO_l{i}' * R{i} * I_local{i} * R{i}' * JO_l{i};
+    if joint_types(i) == 'R'
+        c_i = p_l_local{i}(1:3); % CoM offset relative to joint frame
+        % Steiner's Parallel Axis Theorem: S = m * ( (c'*c)*I - c*c' )
+        S_matrix = m(i) * ((c_i' * c_i) * eye(3) - (c_i * c_i'));
+        I_steiner{i} = simplify(I_local{i} + S_matrix);
+    else
+        I_steiner{i} = I_local{i}; % Prismatic link maintains local inertia
+    end
+end
+
+B_symbolic = sym(zeros(num_joints, num_joints));
+for i = 1:num_joints
+    B_symbolic = B_symbolic + m(i) * (JP_l{i}' * JP_l{i}) + JO_l{i}' * R{i} * I_steiner{i} * R{i}' * JO_l{i};
 end
 
 B_symbolic = simplify(B_symbolic);
 
-%% Coriolis and Centrifugal Matrix C(q, dq) via Christoffel Symbols
-% c_ijk = 0.5 * ( d(b_ij)/d(q_k) + d(b_ik)/d(q_j) - d(b_jk)/d(q_i) )
-% C_ij = sum_k ( c_ijk * dq_k )
-
+%% 6. Explicit Christoffel Symbols c_ijk(q) and Coriolis Matrix C(q, dq)
+c_ijk_sym = sym(zeros(num_joints, num_joints, num_joints));
 C_symbolic = sym(zeros(num_joints, num_joints));
 
 for i = 1:num_joints
@@ -148,14 +159,14 @@ for i = 1:num_joints
             c_ijk = 0.5 * ( diff(B_symbolic(i,j), q(k)) + ...
                             diff(B_symbolic(i,k), q(j)) - ...
                             diff(B_symbolic(j,k), q(i)) );
-            c_ij = c_ij + c_ijk * dq(k);
+            c_ijk_sym(i,j,k) = simplify(c_ijk);
+            c_ij = c_ij + c_ijk_sym(i,j,k) * dq(k);
         end
         C_symbolic(i,j) = simplify(c_ij);
     end
 end
 
-%% Gravity Vector g(q) Computation
-% Potential Energy: U(q) = - sum( m_i * g0' * p_li )
+%% 7. Gravity Vector g(q)
 U_potential_symbolic = sym(0);
 for i = 1:num_joints
     U_potential_symbolic = U_potential_symbolic - m(i) * (g0' * p_l{i});
@@ -166,20 +177,23 @@ for i = 1:num_joints
     g_symbolic(i) = simplify(diff(U_potential_symbolic, q(i)));
 end
 
-%% Equations of Motion Vector Tau_symbolic
+%% 8. Purely Symbolic Equations of Motion Tau(q, dq, ddq)
 tau_symbolic = simplify(B_symbolic * ddq + C_symbolic * dq + g_symbolic);
 
-%% Skew-Symmetry Verification of (B_dot - 2*C)
-% Compute time derivative of B(q): B_dot = sum_k ( dB/dq_k * dq_k )
+tau1_sym = tau_symbolic(1);
+tau2_sym = tau_symbolic(2);
+tau3_sym = tau_symbolic(3);
+
+%% 9. Skew-Symmetry Verification of N(q, dq) = B_dot - 2*C
 B_dot_symbolic = sym(zeros(num_joints, num_joints));
 for k = 1:num_joints
     B_dot_symbolic = B_dot_symbolic + diff(B_symbolic, q(k)) * dq(k);
 end
 
 N_symbolic = simplify(B_dot_symbolic - 2 * C_symbolic);
-is_skew_symmetric = simplify(N_symbolic + N_symbolic'); % Should be zero matrix
+is_skew_symmetric = simplify(N_symbolic + N_symbolic'); % Should be zeros(3,3)
 
-%% Numerical Value Substitution (Using Exact Symbolic Rationals to Avoid Binary Float Artifacts)
+%% 10. Numerical Substitutions (Exact Symbolic Rationals)
 m1_val = sym(1);  m2_val = sym(1);  m3_val = sym(1);
 g_val  = sym('981/100'); % 9.81 m/s^2 exact rational
 
@@ -205,49 +219,99 @@ num_vals = [m1_val, m2_val, m3_val, g_val, ...
             I2xx_val, I2yy_val, I2zz_val, ...
             I3xx_val, I3yy_val, I3zz_val];
 
-% Compute exact symbolic substitution first
-B_num_exact   = subs(B_symbolic, sym_vars, num_vals);
-C_num_exact   = subs(C_symbolic, sym_vars, num_vals);
-g_num_exact   = subs(g_symbolic, sym_vars, num_vals);
-tau_num_exact = subs(tau_symbolic, sym_vars, num_vals);
-N_num_exact   = subs(N_symbolic, sym_vars, num_vals);
+c_ijk_num_exact = subs(c_ijk_sym, sym_vars, num_vals);
+B_num_exact     = subs(B_symbolic, sym_vars, num_vals);
+C_num_exact     = subs(C_symbolic, sym_vars, num_vals);
+g_num_exact     = subs(g_symbolic, sym_vars, num_vals);
+tau_num_exact   = subs(tau_symbolic, sym_vars, num_vals);
+N_num_exact     = subs(N_symbolic, sym_vars, num_vals);
 
-% Format clean decimal outputs with 4 significant digits (vpa + expand)
+% Format clean numerical outputs with 4 significant digits (vpa)
 B_numeric   = vpa(expand(B_num_exact), 4);
 C_numeric   = vpa(expand(C_num_exact), 4);
 g_numeric   = vpa(expand(g_num_exact), 4);
 tau_numeric = vpa(expand(tau_num_exact), 4);
 N_numeric   = vpa(expand(N_num_exact), 4);
 
-%% Display Results
-fprintf('\n============================================================\n');
-fprintf('                 DYNAMIC MODEL: ASSIGNMENT #3               \n');
-fprintf('============================================================\n\n');
+tau1_num = tau_numeric(1);
+tau2_num = tau_numeric(2);
+tau3_num = tau_numeric(3);
 
+%% 11. Display Console Output
 fprintf('------------------------------------------------------------\n');
-fprintf('PART 1: PURELY SYMBOLIC FORMULAS (LETTERS)\n');
+fprintf('PURELY SYMBOLIC FORMULAS (LETTERS & FRACTIONS)\n');
 fprintf('------------------------------------------------------------\n');
 
 fprintf('\n--- Inertia Matrix B(q) (3x3) ---\n');
 disp(B_symbolic);
 
-fprintf('\n--- Coriolis and Centrifugal Matrix C(q, dq) (3x3) ---\n');
+fprintf('\n------------------------------------------------------------\n');
+fprintf('DETAILED SYMBOLIC CHRISTOFFEL SYMBOLS c_ijk(q)\n');
+fprintf('------------------------------------------------------------\n');
+count_nonzero_sym = 0;
+for i = 1:num_joints
+    for j = 1:num_joints
+        for k = 1:num_joints
+            val = c_ijk_sym(i,j,k);
+            if ~isequal(val, sym(0))
+                count_nonzero_sym = count_nonzero_sym + 1;
+                fprintf('  c_%d%d%d = %s\n', i, j, k, char(val));
+            end
+        end
+    end
+end
+fprintf('Total non-zero symbolic Christoffel terms: %d / 27\n', count_nonzero_sym);
+
+fprintf('\n--- Coriolis Matrix C(q, dq) (3x3) ---\n');
 disp(C_symbolic);
 
 fprintf('\n--- Gravity Vector g(q) (3x1) ---\n');
 disp(g_symbolic);
 
-fprintf('\n--- Complete Equations of Motion Tau(q, dq, ddq) ---\n');
-disp(tau_symbolic);
+fprintf('\n------------------------------------------------------------\n');
+fprintf('EXPLICIT JOINT TORQUE EQUATIONS Tau_i(q, dq, ddq) (PURE SYMBOLIC)\n');
+fprintf('------------------------------------------------------------\n');
+fprintf('  tau_1 = %s\n\n', char(tau1_sym));
+fprintf('  tau_2 = %s\n\n', char(tau2_sym));
+fprintf('  tau_3 = %s\n\n', char(tau3_sym));
 
-fprintf('\n--- Matrix N(q, dq) = B_dot - 2*C (Skew-Symmetry Check) ---\n');
+fprintf('\n--- Skew-Symmetry Verification (N = B_dot - 2*C) ---\n');
 disp(N_symbolic);
 fprintf('Verification of N + N^T == 0:\n');
 disp(is_skew_symmetric);
 
 fprintf('\n------------------------------------------------------------\n');
-fprintf('PART 2: EVALUATED NUMERICAL VALUES (DECIMALS)\n');
+fprintf('EVALUATED NUMERICAL VALUES\n');
 fprintf('------------------------------------------------------------\n');
+
+fprintf('\n------------------------------------------------------------\n');
+fprintf('EVALUATED NUMERICAL CHRISTOFFEL SYMBOLS c_ijk(q)\n');
+fprintf('------------------------------------------------------------\n');
+count_nonzero_num = 0;
+for i = 1:num_joints
+    for j = 1:num_joints
+        for k = 1:num_joints
+            val_exact = c_ijk_num_exact(i,j,k);
+            if ~isequal(val_exact, sym(0))
+                count_nonzero_num = count_nonzero_num + 1;
+                val_vpa = vpa(expand(val_exact), 4);
+                fprintf('  c_%d%d%d = %s\n', i, j, k, char(val_vpa));
+            end
+        end
+    end
+end
+if count_nonzero_num == 0
+    fprintf('  All evaluated Christoffel symbols are zero.\n');
+else
+    fprintf('  Total non-zero numerical Christoffel terms: %d / 27\n', count_nonzero_num);
+end
+
+fprintf('\n------------------------------------------------------------\n');
+fprintf('EXPLICIT JOINT TORQUE EQUATIONS Tau_i (NUMERICAL)\n');
+fprintf('------------------------------------------------------------\n');
+fprintf('  tau_1 = %s\n\n', char(tau1_num));
+fprintf('  tau_2 = %s\n\n', char(tau2_num));
+fprintf('  tau_3 = %s\n\n', char(tau3_num));
 
 fprintf('\n--- Evaluated Inertia Matrix B(q) (3x3) ---\n');
 disp(B_numeric);
@@ -258,7 +322,7 @@ disp(C_numeric);
 fprintf('\n--- Evaluated Gravity Vector g(q) (3x1) ---\n');
 disp(g_numeric);
 
-fprintf('\n--- Evaluated Equations of Motion Tau(q, dq, ddq) ---\n');
+fprintf('\n--- Evaluated Vector Tau(q, dq, ddq) ---\n');
 disp(tau_numeric);
 
 fprintf('\n--- Evaluated Matrix N(q, dq) = B_dot - 2*C ---\n');
